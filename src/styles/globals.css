@@ -1,0 +1,211 @@
+@import 'tailwindcss';
+
+/* Themes are classes on <html> (next-themes). Dark is the default. */
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(.light, .light *));
+
+/* ───────────────────────────── Tokens ───────────────────────────── */
+
+:root {
+  --brand-royal: #3a119e;
+  --brand-iris: #612fe2;
+  --brand-lavender: #8152f8;
+  --brand-pearl: #dfeafb;
+  --brand-black: #000000;
+  /* Third-party brand (floating WhatsApp button). */
+  --whatsapp: #25d366;
+  --on-whatsapp: #05310f;
+}
+
+/* Dark (default) */
+:root,
+.dark {
+  color-scheme: dark;
+  --bg: #06030f;
+  --surface: #0e0920;
+  --surface-2: #161033;
+  --border: rgba(129, 82, 248, 0.18);
+  --text: #f4f2ff;
+  --text-muted: #a79fc9;
+  --primary: #8152f8;
+  --primary-hover: #612fe2;
+  --accent-glow: #8152f8;
+  --on-primary: #ffffff;
+  /* Primary-colored TEXT (AA on --bg/--surface); --primary stays for fills. */
+  --link: #9d7bfa;
+  --danger: #ff8a8a;
+  --warning: #ffd27a;
+  --pixel-opacity: 1;
+}
+
+.light {
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #f4f7fe;
+  --surface-2: #dfeafb;
+  --border: rgba(58, 17, 158, 0.12);
+  --text: #0b0620;
+  --text-muted: #4b4470;
+  --primary: #3a119e;
+  --primary-hover: #612fe2;
+  --accent-glow: #612fe2;
+  --on-primary: #ffffff;
+  --link: #3a119e;
+  --danger: #b42318;
+  --warning: #8a4b00;
+  --pixel-opacity: 0.45;
+}
+
+/*
+ * Tailwind theme → utilities (bg-surface, text-muted, border-border, rounded-card…).
+ * `inline` keeps the var() references so classes follow the active theme.
+ * --font-sans comes from next/font (src/styles/fonts.ts) and is not redefined here.
+ */
+@theme inline {
+  --color-royal: var(--brand-royal);
+  --color-iris: var(--brand-iris);
+  --color-lavender: var(--brand-lavender);
+  --color-pearl: var(--brand-pearl);
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-glow: var(--accent-glow);
+  --color-on-primary: var(--on-primary);
+  --color-link: var(--link);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-whatsapp: var(--whatsapp);
+  --color-on-whatsapp: var(--on-whatsapp);
+}
+
+@theme {
+  --spacing: 0.25rem; /* 4px scale */
+  --radius-card: 16px;
+  --radius-pill: 999px;
+  --container-page: 80rem; /* 1280px */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ───────────────────────────── Base ───────────────────────────── */
+
+@layer base {
+  html {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    /* Smooth theme change; next-themes disables transitions during the actual switch. */
+    transition:
+      background-color 300ms ease,
+      color 300ms ease;
+  }
+
+  /* Arabic script needs more vertical room. */
+  :lang(ar) body,
+  body:lang(ar) {
+    line-height: 1.8;
+  }
+
+  ::selection {
+    background: var(--primary);
+    color: var(--on-primary);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+/* ───────────────────────────── Utilities ───────────────────────────── */
+
+/* Page container: max 1280px, fluid gutter. */
+@utility container-page {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+/* Display headings. Tight tracking only in Latin script. */
+@utility text-display {
+  font-size: clamp(2.5rem, 6vw, 6rem);
+  line-height: 1.02;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+
+  &:lang(ar) {
+    letter-spacing: 0;
+    line-height: 1.25;
+  }
+}
+
+@utility text-heading {
+  font-size: clamp(1.75rem, 3.5vw, 3rem);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+
+  &:lang(ar) {
+    letter-spacing: 0;
+    line-height: 1.35;
+  }
+}
+
+/* ───────────────────────────── Motion ───────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Lenis (smooth scroll) recommended styles. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* Pixel loader (loading.tsx). */
+@keyframes pixel-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

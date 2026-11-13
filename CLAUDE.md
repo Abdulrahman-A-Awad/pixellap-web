@@ -1,0 +1,66 @@
+@AGENTS.md
+
+# Pixellap Web — Project Rules
+
+Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from the Laravel API in
+`../pixellap-api` (contract: `../pixellap-api/docs/API.md`).
+
+## Stack
+
+- **Next.js 16** (App Router, Turbopack, `cacheComponents: true` + `partialPrefetching`), React 19, TypeScript strict.
+  This Next version differs from older training data: read `node_modules/next/dist/docs/` before using an API.
+  Key differences we rely on: `src/proxy.ts` (not middleware), async `params`, `PageProps<'/route'>` / `LayoutProps`
+  globals, `'use cache'` + `cacheTag`/`cacheLife`, `revalidateTag(tag, profile)`, `error.tsx` gets `{ error, retry }`.
+- Tailwind CSS v4 (CSS-first `@theme` in `src/styles/globals.css`, Turbopack loader), next-intl (routing only),
+  next-themes, Motion, GSAP + Lenis, react-hook-form + zod, lucide-react, three / R3F.
+- Commands: `npm run dev` · `npm run build` · `npm run lint` · `npm run typecheck` · `npm run format`.
+  `npm run build` prerenders pages from the API — **the API must be running** (`php artisan serve` in pixellap-api).
+
+## Rules
+
+- **Server components by default.** `'use client'` only for interactivity, browser APIs, animation or 3D.
+- **No hardcoded user-facing copy.** Text comes from the API: page/section content from its endpoint,
+  interface strings from `/site` `ui_strings`:
+  - client: `const { t } = useSite(); t('nav.services')`
+  - server: `const t = await getT(locale)` (or `createTranslator(site.ui_strings)` when `site` is at hand).
+    Missing string → add it to `pixellap-api/database/seeders/data/ui_strings.php` (EN + proper MSA Arabic) and re-seed.
+    next-intl message files are NOT used.
+- **RTL-safe always.** Logical properties only: `ms/me/ps/pe/start/end/inset-inline`, `text-start/text-end`,
+  `border-s/e`, `rounded-s/e`. Never `left/right`, `ml/mr`, `pl/pr`, `text-left/right`. Icons that imply direction
+  (arrows, chevrons) get `rtl:-scale-x-100`. Emails, phones and numbers that must stay LTR get `dir="ltr"`.
+- **Colors only through tokens** (`bg-surface`, `text-muted`, `border-border`, `bg-primary`, `text-danger`…).
+  Tokens live in `src/styles/globals.css` (dark on `:root`/`.dark`, light on `.light`). No hex/rgb or Tailwind
+  palette colors in components. Theme variants: `dark:` / `light:`.
+- **3D** code lives in `src/components/three` and is always loaded with `next/dynamic(..., { ssr: false })`
+  from a client component. Logo grid data: `src/lib/brand/logoGrid.ts`.
+- **Motion:** respect `prefers-reduced-motion` everywhere — Motion inside `<MotionConfig reducedMotion="user">`,
+  GSAP/Lenis guarded with `usePrefersReducedMotion()`, CSS animations are neutralised globally.
+  Lenis is driven by the GSAP ticker (`SmoothScroll`); lock scrolling with `lockScroll()` from `src/lib/motion/lenis`.
+- **Prerender-safe:** no `new Date()`, `Math.random()`, `headers()`/`searchParams` in server components of
+  prerendered routes. Request-time data goes in a client component or behind `<Suspense>`.
+- **Links:** always `Link`/`useRouter`/`usePathname` from `@/i18n/navigation` (locale-aware).
+- Every page under `[locale]` starts with `const locale = await resolveLocale(params)` (validates + `setRequestLocale`)
+  and exports `generateMetadata` via `buildMetadata()` (`src/lib/seo/metadata.ts`).
+
+## API layer (`src/lib/api`)
+
+- `types.ts` mirrors `../pixellap-api/docs/api-types.ts` — **keep them identical** (copy the file when the API changes).
+- `client.ts` (`server-only`): `apiGet<T>(path, { locale, tags })` → throws `ApiError`.
+- `endpoints.ts`: `getSite`, `getHome`, `getPage`, `getCategories`, `getCategory`, `getSitemap` — `'use cache'` +
+  `cacheTag` + `cacheLife('hours')`, wrapped in React `cache()`. A 404 calls `notFound()`.
+- Cache tags = the API's tags (`site`, `home`, `categories`, `category:{slug}`, `page:{key}`, `sitemap`).
+  The API calls `POST /api/revalidate` (header `X-Revalidate-Secret`) → `revalidateTag(tag, { expire: 0 })`.
+- Contact form posts through the Server Action `src/app/[locale]/contact/actions.ts` with `X-Site-Key` and
+  `X-Client-IP` (visitor IP) — never from the browser.
+
+## Environment
+
+`.env.local` (gitignored) — see `.env.example`: `NEXT_PUBLIC_SITE_URL`, `API_URL`, `API_SITE_KEY`, `REVALIDATE_SECRET`
+(the last two must equal the values in `pixellap-api/.env`). Only `NEXT_PUBLIC_*` may be read in client code.
+
+## Layout
+
+- `src/app/[locale]/` — pages (root layout is `[locale]/layout.tsx`: `<html lang dir>`, providers, header/footer).
+- `src/components/{layout,brand,contact,sections,providers,ui,three}` · `src/lib/*` · `src/styles/{globals.css,fonts.ts}`.
+- Fonts: only `src/styles/fonts.ts` (IBM Plex Sans Arabic now; swap to RH-Zak via next/font/local there).
+- Brand assets: `public/brand/` (logo / mark, color and white variants).
