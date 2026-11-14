@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowRight, Menu } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/brand/Logo';
 import { useSite } from '@/components/providers/SiteProvider';
@@ -8,9 +9,12 @@ import { buttonClasses } from '@/components/ui/Button';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 import { LanguageSwitch } from './LanguageSwitch';
-import { MobileMenu } from './MobileMenu';
 import { NAV_ITEMS, isActive } from './nav';
 import { ThemeToggle } from './ThemeToggle';
+
+// Loaded on first use: keeps Motion out of the initial bundle.
+const loadMobileMenu = () => import('./MobileMenu').then((m) => m.MobileMenu);
+const MobileMenu = dynamic(loadMobileMenu, { ssr: false });
 
 const SOLID_AFTER = 24; // px
 const HIDE_AFTER = 120; // px — never hide near the top
@@ -21,6 +25,7 @@ export function Header() {
   const [solid, setSolid] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuLoaded, setMenuLoaded] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   // Transparent at the top → blurred surface after 24px. Hide on scroll down, show on scroll up.
@@ -104,7 +109,12 @@ export function Header() {
             <button
               ref={menuButtonRef}
               type="button"
-              onClick={() => setMenuOpen(true)}
+              onPointerDown={() => void loadMobileMenu()}
+              onFocus={() => void loadMobileMenu()}
+              onClick={() => {
+                setMenuLoaded(true);
+                setMenuOpen(true);
+              }}
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
               className="inline-flex size-11 items-center justify-center rounded-pill hover:bg-surface-2 lg:hidden"
@@ -116,13 +126,15 @@ export function Header() {
         </div>
       </header>
 
-      <MobileMenu
-        open={menuOpen}
-        onClose={() => {
-          setMenuOpen(false);
-          menuButtonRef.current?.focus();
-        }}
-      />
+      {menuLoaded && (
+        <MobileMenu
+          open={menuOpen}
+          onClose={() => {
+            setMenuOpen(false);
+            menuButtonRef.current?.focus();
+          }}
+        />
+      )}
     </>
   );
 }

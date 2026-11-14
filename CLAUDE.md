@@ -53,6 +53,21 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Contact form posts through the Server Action `src/app/[locale]/contact/actions.ts` with `X-Site-Key` and
   `X-Client-IP` (visitor IP) — never from the browser.
 
+## Home hero (3D)
+
+- `components/sections/hero/`: `Hero` (server copy = LCP) → `HeroStage` (sticky pin, GSAP scrub → `progress` ref)
+  → `SceneGate` (tier decision, poster/video/scene, pause off-screen) → `three/PixelScene` (dynamic, ssr:false).
+- Tiers (`src/lib/device.ts`): static (reduced motion / no WebGL2) · video (weak mobile or Save-Data, needs the
+  CMS loop video) · low (32 cubes, no postfx, dpr ≤ 1.25) · high. `PerformanceMonitor` drops high→low once.
+  **Dev only:** force with `?tier=high|low|video|static`.
+- All cube motion is in ONE `useFrame` (`three/PixelCubes.tsx`); layouts are precomputed in `three/layouts.ts`.
+  Never add React state per frame. Scratch objects live in refs (React Compiler forbids mutating memo values).
+- Reflections come from `three/StudioEnvironment.tsx` (lightformer panels → PMREM). Do not use drei
+  `<Environment>`: it bundles HDR/EXR loaders. No network assets in the scene.
+- Budgets: 3D path ≤ 250 KB gzip (three+R3F ≈ 233 KB, scene ≈ 11 KB; postprocessing ≈ 22 KB lazy, high+dark only).
+  Nothing heavy in the initial route: the scene, GSAP, Lenis, Motion (menu / reel dialog) load after idle or on use.
+- Showreel: `ui/VideoModal` intercepts any link to `#reel` (YouTube/Vimeo privacy embeds or direct files).
+
 ## Environment
 
 `.env.local` (gitignored) — see `.env.example`: `NEXT_PUBLIC_SITE_URL`, `API_URL`, `API_SITE_KEY`, `REVALIDATE_SECRET`

@@ -66,6 +66,7 @@
   --color-iris: var(--brand-iris);
   --color-lavender: var(--brand-lavender);
   --color-pearl: var(--brand-pearl);
+  --color-ink: var(--brand-black);
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -195,6 +196,97 @@ html.lenis body {
 }
 .lenis.lenis-stopped {
   overflow: clip;
+}
+
+/* ───────────────────────────── Hero ───────────────────────────── */
+
+/* Word-by-word title reveal. Starts partly visible (not opacity 0) so LCP is recorded at once. */
+.word-reveal {
+  display: inline-block;
+  animation: word-in 0.9s var(--ease-out-expo) both;
+}
+@keyframes word-in {
+  from {
+    opacity: 0.12;
+    transform: translateY(0.38em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Readability scrim over the 3D scene, from the inline-start side (mirrors in RTL). */
+.hero-scrim {
+  --scrim-dir: to right;
+  background: linear-gradient(
+    var(--scrim-dir),
+    color-mix(in oklab, var(--bg) 92%, transparent) 0%,
+    color-mix(in oklab, var(--bg) 70%, transparent) 34%,
+    transparent 62%
+  );
+}
+[dir='rtl'] .hero-scrim {
+  --scrim-dir: to left;
+}
+
+/* Desktop poster: fades out towards the copy (inline-start side; mirrors in RTL). */
+@media (min-width: 1024px) {
+  .hero-poster-mask {
+    --mask-dir: to right;
+    mask-image: linear-gradient(var(--mask-dir), transparent 0%, #000 45%);
+  }
+  [dir='rtl'] .hero-poster-mask {
+    --mask-dir: to left;
+  }
+}
+
+/* Pixel shimmer on the placeholder mark while the scene loads. */
+.hero-pixel-shimmer {
+  animation: pixel-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes pixel-shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Falling pixel of the scroll hint. */
+.hero-scroll-pixel {
+  animation: scroll-pixel 1.8s var(--ease-out-expo) infinite;
+}
+@keyframes scroll-pixel {
+  0% {
+    transform: translate(-50%, -4px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 30px);
+    opacity: 0;
+  }
+}
+[dir='rtl'] .hero-scroll-pixel {
+  animation-name: scroll-pixel-rtl;
+}
+@keyframes scroll-pixel-rtl {
+  0% {
+    transform: translate(50%, -4px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(50%, 30px);
+    opacity: 0;
+  }
 }
 
 /* Pixel loader (loading.tsx). */

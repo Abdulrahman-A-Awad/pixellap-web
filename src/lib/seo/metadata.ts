@@ -29,6 +29,8 @@ export async function buildMetadata({ locale, path, title, description, image }:
   const resolvedTitle = title || settings.seo_default_title;
   const resolvedDescription = description || settings.seo_default_description;
   const url = localizedUrl(locale, path);
+  // Page image first, then the site-wide sharing image from settings.
+  image = image || settings.og_image;
 
   return {
     metadataBase: new URL(SITE_URL),

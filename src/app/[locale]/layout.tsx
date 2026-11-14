@@ -9,6 +9,7 @@ import { WhatsAppButton } from '@/components/layout/WhatsAppButton';
 import { SiteProvider } from '@/components/providers/SiteProvider';
 import { SmoothScroll } from '@/components/providers/SmoothScroll';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { VideoModal } from '@/components/ui/VideoModal';
 import { resolveLocale } from '@/i18n/locale';
 import { isRtl, routing } from '@/i18n/routing';
 import { getSite } from '@/lib/api/endpoints';
@@ -53,6 +54,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
               </main>
               <Footer site={site} t={t} />
               <WhatsAppButton />
+              <VideoModal />
             </SiteProvider>
           </NextIntlClientProvider>
         </ThemeProvider>

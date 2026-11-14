@@ -104,6 +104,8 @@ export interface SiteSettings {
   };
   seo_default_title: string;
   seo_default_description: string;
+  /** Absolute URL of the default social sharing image (1200×630), or null when not uploaded. */
+  og_image: string | null;
 }
 
 export interface NavCategory {
