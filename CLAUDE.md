@@ -94,6 +94,17 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - After seeding new ui strings, the Next data cache may still hold the old `/site`: POST the `site` tag to
   `/api/revalidate` (the API's webhook does this automatically for admin edits, not for seeders).
 
+## Production
+
+- Runs with `next start` under PM2 (`ecosystem.config.cjs`, 1 instance, 127.0.0.1:3000) behind Nginx; deploy kit and
+  runbook in `../pixellap-api/deploy/README.md` (`deploy-web.sh` builds each release in its own folder, `current` symlink,
+  `--rollback`). Env template: `.env.production.example` (values are baked in at build time).
+- Security headers + CSP live in `next.config.ts` (no nonces: pages are prerendered, so scripts need `'unsafe-inline'`).
+  **Any new external origin** (embed, CDN, analytics) must be added to the CSP there, or it is blocked in production.
+  No `eval`/`new Function` (Zod runs with `z.config({ jitless: true })`).
+- `compress: false` (Nginx compresses), `poweredByHeader: false`; `images.remotePatterns` = the API_URL host's `/storage/**` only.
+- Nginx overwrites `X-Forwarded-For` with the visitor IP — the contact action relies on its first entry.
+
 ## Environment
 
 `.env.local` (gitignored) — see `.env.example`: `NEXT_PUBLIC_SITE_URL`, `API_URL`, `API_SITE_KEY`, `REVALIDATE_SECRET`

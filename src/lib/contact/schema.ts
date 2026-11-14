@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import type { Translate } from '@/lib/site/translate';
 
+// No eval-based validators: under the site's CSP (no 'unsafe-eval') Zod's `Function("")` probe
+// would be blocked and reported as a violation on every page with the form.
+z.config({ jitless: true });
+
 /** Mirrors StoreContactRequest in pixellap-api (keep in sync with docs/API.md). */
 export const CONTACT_LIMITS = {
   name: 120,

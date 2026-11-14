@@ -1,0 +1,42 @@
+# Deploy the website to the production server over SSH.
+# The deploy script lives in the API repository on the server:
+#   /var/www/pixellap-api/deploy/scripts/deploy-web.sh
+#
+# DISABLED BY DEFAULT: runs only when started by hand (Actions → Deploy → Run workflow).
+# To deploy on every push to main, uncomment the `push:` block below.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   HOST  server IP or hostname
+#   USER  deploy
+#   KEY   private SSH key whose public half is in /home/deploy/.ssh/authorized_keys
+name: Deploy
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+concurrency:
+  group: production-deploy-web
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Deploy over SSH
+        env:
+          SSH_HOST: ${{ secrets.HOST }}
+          SSH_USER: ${{ secrets.USER }}
+          SSH_KEY: ${{ secrets.KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o BatchMode=yes \
+            "$SSH_USER@$SSH_HOST" 'bash /var/www/pixellap-api/deploy/scripts/deploy-web.sh'
