@@ -11,6 +11,7 @@ import { useSite } from '@/components/providers/SiteProvider';
 import { buttonClasses } from '@/components/ui/Button';
 import type { ServiceCategory } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
+import { interpolate } from '@/lib/site/format';
 import { CONTACT_FIELDS, CONTACT_LIMITS, makeContactSchema, type ContactFormValues } from '@/lib/contact/schema';
 import { PixelCheck } from './PixelCheck';
 
@@ -58,6 +59,13 @@ export function ContactForm({ categories }: { categories: ServiceCategory[] }) {
   // ?service={slug} preselects a (visible) category.
   const requested = searchParams.get('service') ?? '';
   const preselected = categories.some((c) => c.slug === requested) ? requested : '';
+  // ?item= (from "Request this service") prefills a localized first line of the message.
+  const item = (searchParams.get('item') ?? '').trim().slice(0, 200);
+  const prefill = item
+    ? `${interpolate(t('contact.interested_in'), { item })}
+
+`
+    : '';
 
   const schema = useMemo(() => makeContactSchema(t), [t]);
   const defaultValues: ContactFormValues = {
@@ -66,7 +74,7 @@ export function ContactForm({ categories }: { categories: ServiceCategory[] }) {
     phone: '',
     company: '',
     service: preselected,
-    message: '',
+    message: prefill,
     website: '',
   };
 

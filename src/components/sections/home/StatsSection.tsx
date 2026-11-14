@@ -3,7 +3,6 @@ import { PixelField } from '@/components/brand/PixelField';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import type { HomeStat } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
-import { StatCounter } from './StatCounter';
 
 /** Big counters with thin dividers; 2×2 on mobile, one row on desktop. */
 export function StatsSection({
@@ -57,7 +56,10 @@ export function StatsSection({
                 {/* Numbers stay LTR inside RTL text. */}
                 <bdi dir="ltr" className="inline-flex items-baseline">
                   {stat.prefix && <span className="text-primary">{stat.prefix}</span>}
-                  <StatCounter value={stat.value} />
+                  {/* Pure-CSS count-up (globals.css .stat-count): the real number stays in the DOM. */}
+                  <span data-reveal className="stat-count tabular-nums" style={{ '--to': stat.value } as CSSProperties}>
+                    <span className="stat-final">{stat.value.toLocaleString('en-US')}</span>
+                  </span>
                   {stat.suffix && <span className="text-primary">{stat.suffix}</span>}
                 </bdi>
               </dd>

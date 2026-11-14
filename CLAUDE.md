@@ -82,6 +82,17 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Fonts: IBM Plex Sans Arabic 400 + 700 only — use `font-normal` / `font-bold` (no light/medium/semibold).
 - Numbers inside RTL text: wrap in `<bdi dir="ltr">`. Pixel numerals: `brand/PixelDigits`.
 - Page transitions: `motion/PageTransition` (CSS pixel grid, same-locale internal links only, focus → `<main>`).
+- Prefer zero-JS patterns: FAQ = native `<details name="faq-{scope}">` (`home/FaqSection`, reused on category pages);
+  stat counters = CSS `@property --n` + `.stat-count` driven by the reveal observer (no island).
+- Plurals: `plural(t, locale, 'services.count', n)` (`lib/site/format.ts`) picks `{base}_{Intl.PluralRules category}`
+  — Arabic needs zero/one/two/few/many/other keys in the seeder. `interpolate()` fills `{placeholders}`.
+- Services: `/services` = `services/ServicesBento` (fixed 2-large + 4-medium layout); `/services/[slug]` = CategoryHero
+  (breadcrumb + BreadcrumbList), overview (`.prose-rich`), sticky `ServiceIndex` / mobile `ServiceChips`, `ServiceItemCard`
+  ("Request this service" → `/contact?service=&item=` prefills the form), FAQ, `CategoryRail`, CTA, Service JSON-LD.
+- SEO: `app/sitemap.ts` (from GET /sitemap, en/ar alternates) and `app/robots.ts`. `buildMetadata` falls back to
+  `settings.og_image` for pages without their own image.
+- After seeding new ui strings, the Next data cache may still hold the old `/site`: POST the `site` tag to
+  `/api/revalidate` (the API's webhook does this automatically for admin edits, not for seeders).
 
 ## Environment
 

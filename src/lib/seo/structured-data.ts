@@ -1,6 +1,35 @@
-import type { Locale, Site } from '@/lib/api/types';
+import type { Locale, ServiceCategoryDetail, Site } from '@/lib/api/types';
 import { settingValue, socialLinks } from '@/lib/site/settings';
 import { SITE_URL } from '@/lib/site-url';
+
+/** schema.org Service for a category page, with its sub-services as an offer catalog. */
+export function serviceJsonLd(category: ServiceCategoryDetail, site: Site, locale: Locale): Record<string, unknown> {
+  const url = `${SITE_URL}/${locale}/services/${category.slug}`;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: category.title,
+    serviceType: category.title,
+    description: category.seo.description ?? category.excerpt,
+    url,
+    areaServed: 'AE',
+    ...(category.cover ? { image: category.cover.url } : {}),
+    provider: {
+      '@type': 'Organization',
+      name: site.settings.site_name,
+      url: `${SITE_URL}/${locale}`,
+      logo: `${SITE_URL}/brand/pixellap-logo.svg`,
+    },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: category.title,
+      itemListElement: category.services.map((service) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: service.title, description: service.description },
+      })),
+    },
+  };
+}
 
 /** schema.org Organization for the home page (only fields that have real values). */
 export function organizationJsonLd(site: Site, locale: Locale): Record<string, unknown> {

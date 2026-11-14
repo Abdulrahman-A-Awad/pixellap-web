@@ -2,32 +2,12 @@ import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { PixelComposition } from '@/components/brand/PixelComposition';
 import { PixelDigits } from '@/components/brand/PixelDigits';
+import { CategoryIcon } from '@/components/sections/services/CategoryIcon';
 import { Link } from '@/i18n/navigation';
-import type { HomeCategoryCard, MediaAsset } from '@/lib/api/types';
+import type { HomeCategoryCard } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
 
 const MAX_TAGS = 6;
-
-/** Category icon: the CMS SVG, or a tiny pixel cluster as fallback. */
-function CategoryIcon({ icon, index }: { icon: MediaAsset | null; index: number }) {
-  if (icon) {
-    // eslint-disable-next-line @next/next/no-img-element -- SVG icons are not optimised by next/image
-    return <img src={icon.url} alt="" width={40} height={40} className="size-10 object-contain" />;
-  }
-  return (
-    <span aria-hidden="true" className="grid size-10 grid-cols-3 gap-0.5 rounded-xl bg-surface-2 p-1.5">
-      {Array.from({ length: 9 }, (_, i) => (
-        <span
-          key={i}
-          className={cn(
-            'rounded-[2px]',
-            (i * 7 + index * 3) % 4 === 0 ? 'bg-transparent' : i % 2 ? 'bg-iris' : 'bg-lavender',
-          )}
-        />
-      ))}
-    </span>
-  );
-}
 
 /**
  * One stacking card. The whole card is clickable through a single stretched link

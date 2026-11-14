@@ -47,7 +47,15 @@ function renderSection(section: HomeSection, site: Site, t: Translate, stats: St
     case 'about':
       return <AboutTeaser section={section} />;
     case 'faq':
-      return <FaqSection section={section} />;
+      return (
+        <FaqSection
+          faqs={section.faqs}
+          scope="home"
+          eyebrow={section.eyebrow}
+          title={section.title}
+          subtitle={section.subtitle}
+        />
+      );
     case 'contact_cta':
       return (
         <ContactCtaBand

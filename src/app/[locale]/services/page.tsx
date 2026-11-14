@@ -1,10 +1,15 @@
-import { ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
+import { ContactCtaBand } from '@/components/sections/ContactCtaBand';
+import { ProcessSection } from '@/components/sections/home/ProcessSection';
 import { PageHero } from '@/components/sections/PageHero';
-import { Link } from '@/i18n/navigation';
+import { ServicesBento } from '@/components/sections/services/ServicesBento';
 import { resolveLocale } from '@/i18n/locale';
-import { getCategories, getPage } from '@/lib/api/endpoints';
+import { getCategories, getHome, getPage, getSite } from '@/lib/api/endpoints';
+import type { ContactCtaSection, ProcessSection as ProcessData } from '@/lib/api/types';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { plural } from '@/lib/site/format';
+import { settingValue, whatsappUrl } from '@/lib/site/settings';
+import { createTranslator } from '@/lib/site/translate';
 
 export async function generateMetadata({ params }: PageProps<'/[locale]/services'>): Promise<Metadata> {
   const locale = await resolveLocale(params);
@@ -18,39 +23,40 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/services
   });
 }
 
-/** Placeholder: the real services index comes in the next prompts. */
 export default async function ServicesPage({ params }: PageProps<'/[locale]/services'>) {
   const locale = await resolveLocale(params);
-  const [{ data: page }, { data: categories }] = await Promise.all([
+  const [{ data: page }, { data: categories }, { data: site }, { data: home }] = await Promise.all([
     getPage('services', locale),
     getCategories(locale),
+    getSite(locale),
+    getHome(locale),
   ]);
+  const t = createTranslator(site.ui_strings);
+  const process = home.find((s): s is ProcessData => s.key === 'process');
+  const cta = home.find((s): s is ContactCtaSection => s.key === 'contact_cta');
 
   return (
     <>
-      <PageHero title={page.title} subtitle={page.subtitle} seed={5} />
-      <section className="container-page">
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <li key={category.slug}>
-              <Link
-                href={`/services/${category.slug}`}
-                className="group flex h-full flex-col gap-2 rounded-card border border-border bg-surface p-5 transition-colors hover:border-primary"
-              >
-                <span className="font-bold">{category.title}</span>
-                <span className="text-sm text-muted">{category.excerpt}</span>
-                <span className="mt-auto inline-flex items-center gap-2 pt-2 text-sm text-link">
-                  {category.services_count}
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="size-4 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1"
-                  />
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <PageHero title={page.title} subtitle={page.subtitle} image={page.hero} seed={5} />
+
+      <section aria-label={page.title} className="pb-12">
+        <div className="container-page">
+          <ServicesBento categories={categories} countLabel={(n) => plural(t, locale, 'services.count', n)} />
+        </div>
       </section>
+
+      {process && <ProcessSection section={process} />}
+
+      {cta && (
+        <ContactCtaBand
+          title={cta.title}
+          subtitle={cta.subtitle}
+          responseTime={cta.response_time ?? settingValue(site.settings.response_time)}
+          whatsappUrl={whatsappUrl(site.settings)}
+          ctaLabel={cta.cta?.label ?? t('actions.start_project')}
+          whatsappLabel={t('contact.whatsapp')}
+        />
+      )}
     </>
   );
 }

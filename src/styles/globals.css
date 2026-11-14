@@ -318,6 +318,69 @@ html.lenis body {
   }
 }
 
+/* ───────────────────────────── Stats count-up (pure CSS) ───────────────────────────── */
+
+/*
+ * The DOM holds the final number (no JS, crawlers, screen readers). When RevealObserver marks the
+ * element (data-reveal-state) and motion is allowed, the visible digits come from a CSS counter
+ * driven by the registered integer --n, which transitions 0 → --to once the element is shown.
+ * Elements already on screen at load go straight to "shown" and simply show the final value.
+ */
+@property --n {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stat-count[data-reveal-state] {
+    --n: 0;
+    counter-reset: n var(--n);
+    /* Counting is the effect here — no slide/fade on the number itself. */
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .stat-count[data-reveal-state='shown'] {
+    --n: var(--to);
+    transition: --n 1.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+  .stat-count[data-reveal-state]::after {
+    content: counter(n);
+  }
+  /* Visually hidden, still announced. */
+  .stat-count[data-reveal-state] > .stat-final {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* ───────────────────────────── FAQ (<details>) ───────────────────────────── */
+
+/* Smooth open/close where ::details-content + interpolate-size exist; instant elsewhere. */
+@supports (interpolate-size: allow-keywords) {
+  .faq-item {
+    interpolate-size: allow-keywords;
+  }
+  .faq-item::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 0.3s var(--ease-out-expo),
+      content-visibility 0.3s allow-discrete;
+  }
+  .faq-item[open]::details-content {
+    block-size: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-item::details-content {
+    transition: none;
+  }
+}
+
 /* ───────────────────────────── Process line ───────────────────────────── */
 
 .process-track,
@@ -398,6 +461,53 @@ html.lenis body {
   .marquee-track [data-duplicate] {
     display: none;
   }
+}
+
+/* Long-form rich text from the admin editor (category overview). */
+.prose-rich > * + * {
+  margin-top: 1em;
+}
+.prose-rich h2,
+.prose-rich h3 {
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 1.6em;
+}
+.prose-rich h2 {
+  font-size: 1.5em;
+}
+.prose-rich h3 {
+  font-size: 1.2em;
+}
+.prose-rich ul,
+.prose-rich ol {
+  padding-inline-start: 1.25em;
+}
+.prose-rich ul {
+  list-style: disc;
+}
+.prose-rich ol {
+  list-style: decimal;
+}
+.prose-rich li + li {
+  margin-top: 0.4em;
+}
+.prose-rich li::marker {
+  color: var(--primary);
+}
+.prose-rich a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-rich strong {
+  color: var(--text);
+}
+.prose-rich blockquote {
+  border-inline-start: 3px solid var(--primary);
+  padding-inline-start: 1em;
+  color: var(--text);
 }
 
 /* Rich-text answers from the admin editor (FAQ). */
