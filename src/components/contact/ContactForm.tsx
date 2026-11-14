@@ -34,7 +34,7 @@ function Field({ id, label, error, optionalLabel, children }: FieldProps) {
   const errorId = `${id}-error`;
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="flex items-baseline justify-between gap-2 text-sm font-medium">
+      <label htmlFor={id} className="flex items-baseline justify-between gap-2 text-sm font-bold">
         {label}
         {optionalLabel && <span className="text-xs font-normal text-muted">{optionalLabel}</span>}
       </label>

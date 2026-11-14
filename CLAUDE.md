@@ -68,6 +68,21 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   Nothing heavy in the initial route: the scene, GSAP, Lenis, Motion (menu / reel dialog) load after idle or on use.
 - Showreel: `ui/VideoModal` intercepts any link to `#reel` (YouTube/Vimeo privacy embeds or direct files).
 
+## Sections & motion conventions
+
+- Home renders `/home` sections in API order (`app/[locale]/page.tsx` → `renderSection`). Sections live in
+  `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `PageHero`, `ui/CtaLink`.
+- **Reveal on scroll:** add `data-reveal` (stagger with `style={{'--reveal-i': n}}`). `motion/RevealObserver` (one shared
+  IntersectionObserver) only hides elements that start below the fold, so above-the-fold text never waits for JS.
+- **Above-the-fold text is always plain server HTML** (no JS-gated or opacity-0 animations). The hero title reveal is
+  pure CSS and starts at opacity 0.001. Phones: the hero visual is an inline SVG until first interaction
+  (keeps the headline as LCP).
+- Islands: `useInView` / `observe()` (`lib/hooks/useInView.ts`) share observers; GSAP is only ever `import()`ed after
+  idle (`StackingCards`, `HeroStage`, `SmoothScroll`). Never import gsap/motion statically in always-loaded code.
+- Fonts: IBM Plex Sans Arabic 400 + 700 only — use `font-normal` / `font-bold` (no light/medium/semibold).
+- Numbers inside RTL text: wrap in `<bdi dir="ltr">`. Pixel numerals: `brand/PixelDigits`.
+- Page transitions: `motion/PageTransition` (CSS pixel grid, same-locale internal links only, focus → `<main>`).
+
 ## Environment
 
 `.env.local` (gitignored) — see `.env.example`: `NEXT_PUBLIC_SITE_URL`, `API_URL`, `API_SITE_KEY`, `REVALIDATE_SECRET`

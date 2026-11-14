@@ -59,7 +59,7 @@ export default function VideoDialog({
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="mb-3 flex items-center justify-between gap-4">
-                <h2 id={titleId} className="text-lg font-medium">
+                <h2 id={titleId} className="text-lg font-bold">
                   {t('actions.watch_reel')}
                 </h2>
                 <button

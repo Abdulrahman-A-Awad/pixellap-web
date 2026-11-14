@@ -1,8 +1,7 @@
 import { ArrowRight, Play } from 'lucide-react';
-import type { ReactNode } from 'react';
 import { buttonClasses } from '@/components/ui/Button';
-import { Link } from '@/i18n/navigation';
-import type { HeroSection, HomeStat, Link as CtaLink, SiteSettings } from '@/lib/api/types';
+import { CtaLink } from '@/components/ui/CtaLink';
+import type { HeroSection, HomeStat, SiteSettings } from '@/lib/api/types';
 import { settingValue } from '@/lib/site/settings';
 import type { Translate } from '@/lib/site/translate';
 import { HeroStage } from './HeroStage';
@@ -15,22 +14,6 @@ interface HeroProps {
   stats: HomeStat[];
   settings: SiteSettings;
   t: Translate;
-}
-
-/** Internal paths use the locale-aware Link; hashes and absolute URLs stay plain anchors. */
-function CtaAnchor({ cta, className, children }: { cta: CtaLink; className: string; children: ReactNode }) {
-  if (cta.url.startsWith('/')) {
-    return (
-      <Link href={cta.url} className={className}>
-        {children}
-      </Link>
-    );
-  }
-  return (
-    <a href={cta.url} className={className}>
-      {children}
-    </a>
-  );
 }
 
 /**
@@ -47,14 +30,14 @@ export function Hero({ hero, stats, settings, t }: HeroProps) {
       <div aria-hidden="true" className="hero-scrim pointer-events-none absolute inset-0 hidden lg:block" />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[calc(max(60svh,20rem)-6rem)] h-24 bg-linear-to-b from-transparent to-bg lg:hidden"
+        className="pointer-events-none absolute inset-x-0 top-[calc(max(42svh,16rem)-6rem)] h-24 bg-linear-to-b from-transparent to-bg lg:hidden"
       />
 
       <div data-hero-copy className="relative lg:absolute lg:inset-0 lg:flex lg:items-center">
         <div className="container-page">
           <div className="max-w-2xl py-10 lg:py-0">
             {hero.eyebrow && (
-              <p className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-link">
+              <p className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-link">
                 <span aria-hidden="true" className="size-2 rounded-[2px] bg-primary" />
                 {hero.eyebrow}
               </p>
@@ -66,18 +49,18 @@ export function Hero({ hero, stats, settings, t }: HeroProps) {
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
               {hero.cta && (
-                <CtaAnchor cta={hero.cta} className={buttonClasses('primary', 'px-6')}>
+                <CtaLink cta={hero.cta} className={buttonClasses('primary', 'px-6')}>
                   {hero.cta.label}
                   <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
-                </CtaAnchor>
+                </CtaLink>
               )}
               {hero.cta2 && showreel && (
-                <CtaAnchor cta={hero.cta2} className={buttonClasses('ghost', 'border border-border px-5')}>
+                <CtaLink cta={hero.cta2} className={buttonClasses('ghost', 'border border-border px-5')}>
                   <span className="inline-flex size-7 items-center justify-center rounded-pill bg-primary text-on-primary">
                     <Play aria-hidden="true" className="size-3.5 translate-x-px fill-current" />
                   </span>
                   {hero.cta2.label}
-                </CtaAnchor>
+                </CtaLink>
               )}
             </div>
 

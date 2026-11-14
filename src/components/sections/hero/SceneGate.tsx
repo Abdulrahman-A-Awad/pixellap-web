@@ -6,7 +6,13 @@ import type { PointerState } from '@/components/three/PixelCubes';
 import type { MediaAsset } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
 import { detectTier, type Tier } from '@/lib/device';
-import { useDocumentHidden, useIdleAfterLoad, useMediaQuery, useThemeColors } from '@/lib/hooks/useExternal';
+import {
+  useDocumentHidden,
+  useFirstInteraction,
+  useIdleAfterLoad,
+  useMediaQuery,
+  useThemeColors,
+} from '@/lib/hooks/useExternal';
 import { HeroPlaceholder } from './HeroPlaceholder';
 
 // The 3D scene is never part of the initial route chunk and never server-rendered.
@@ -55,6 +61,8 @@ export function SceneGate({ poster, video, progress, pointer, className }: Scene
   // Mount the scene only after load + idle: creating the WebGL context and compiling shaders
   // blocks the main thread, and must never delay the LCP (the server-rendered copy).
   const idle = useIdleAfterLoad();
+  // Phones: the loop video waits for the first interaction, so it never becomes a late LCP.
+  const interacted = useFirstInteraction();
 
   const box = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(true);
@@ -94,7 +102,7 @@ export function SceneGate({ poster, video, progress, pointer, className }: Scene
 
       {/* Loaded after load + idle so it never competes with the LCP; the poster underneath
           (same frame) stays visible until the video actually plays — no second poster download. */}
-      {tier === 'video' && video && idle && (
+      {tier === 'video' && video && idle && (desktop || interacted) && (
         <video
           className={cn(
             'absolute inset-0 size-full object-cover opacity-0 transition-opacity duration-700',

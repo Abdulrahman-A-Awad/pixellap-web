@@ -17,7 +17,8 @@ import { IBM_Plex_Sans_Arabic } from 'next/font/google';
  *   });
  */
 export const fontSans = IBM_Plex_Sans_Arabic({
-  weight: ['300', '400', '500', '700'],
+  // Two weights only (LCP budget): 400 for text, 700 for emphasis/headings.
+  weight: ['400', '700'],
   subsets: ['arabic', 'latin'],
   variable: '--font-sans',
   display: 'swap',

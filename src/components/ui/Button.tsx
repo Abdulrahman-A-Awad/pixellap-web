@@ -11,7 +11,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
 /** Class string for pill buttons, usable on <button>, <a> and <Link>. */
 export function buttonClasses(variant: ButtonVariant = 'primary', className?: string): string {
   return cn(
-    'inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-5 py-2.5 text-sm font-medium',
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-5 py-2.5 text-sm font-bold',
     'transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60',
     VARIANTS[variant],
     className,

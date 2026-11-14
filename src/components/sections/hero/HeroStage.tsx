@@ -97,7 +97,8 @@ export function HeroStage({ poster, video, children }: HeroStageProps) {
           video={video}
           progress={progress}
           pointer={pointer}
-          className="h-[60svh] min-h-80 lg:absolute lg:inset-0 lg:h-full"
+          // Mobile: decorative area capped at 42svh so the headline is the dominant (LCP) element.
+          className="h-[42svh] min-h-64 lg:absolute lg:inset-0 lg:h-full"
         />
         {children}
       </div>

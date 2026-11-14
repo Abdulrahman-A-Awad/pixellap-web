@@ -200,15 +200,24 @@ html.lenis body {
 
 /* ───────────────────────────── Hero ───────────────────────────── */
 
-/* Word-by-word title reveal. Starts partly visible (not opacity 0) so LCP is recorded at once. */
+/*
+ * Word-by-word title reveal: pure CSS, starts immediately, ≤ 600ms total (500ms + 40ms × --i).
+ * Starts at opacity 0.001 (never 0) so the first paint counts for LCP. No animation at all
+ * under reduced motion.
+ */
 .word-reveal {
   display: inline-block;
-  animation: word-in 0.9s var(--ease-out-expo) both;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .word-reveal {
+    animation: word-in 0.5s var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
 }
 @keyframes word-in {
   from {
-    opacity: 0.12;
-    transform: translateY(0.38em);
+    opacity: 0.001;
+    transform: translateY(0.3em);
   }
   to {
     opacity: 1;
@@ -287,6 +296,149 @@ html.lenis body {
     transform: translate(50%, 30px);
     opacity: 0;
   }
+}
+
+/* ───────────────────────────── Reveal on scroll ───────────────────────────── */
+
+/*
+ * [data-reveal] elements that start below the fold are marked pending by RevealObserver and
+ * fade/slide in when they scroll into view. Nothing is hidden without JS, before hydration,
+ * for content already on screen, or under reduced motion.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal-state] {
+    transition:
+      opacity 0.7s var(--ease-out-expo),
+      transform 0.8s var(--ease-out-expo);
+    transition-delay: calc(var(--reveal-i, 0) * 70ms);
+  }
+  [data-reveal-state='pending'] {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+
+/* ───────────────────────────── Process line ───────────────────────────── */
+
+.process-track,
+.process-line {
+  position: absolute;
+  /* Mobile: vertical, through the centre of the 48px step squares on the inline-start side. */
+  inset-block: 24px;
+  inset-inline-start: 23px;
+  width: 2px;
+  border-radius: 2px;
+}
+.process-track {
+  background: var(--border);
+}
+.process-line {
+  background: linear-gradient(var(--brand-lavender), var(--brand-iris));
+  transform: scaleY(var(--line, 0));
+  transform-origin: top;
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+@media (min-width: 1024px) {
+  .process-track,
+  .process-line {
+    /* Desktop: horizontal, from the first to the last step (4 columns, 2rem gaps). */
+    inset-block: auto;
+    top: 23px;
+    inset-inline-start: 24px;
+    inset-inline-end: calc((100% - 6rem) / 4 - 24px);
+    width: auto;
+    height: 2px;
+  }
+  .process-line {
+    background: linear-gradient(to right, var(--brand-lavender), var(--brand-iris));
+    transform: scaleX(var(--line, 0));
+    transform-origin: left center;
+  }
+  [dir='rtl'] .process-line {
+    background: linear-gradient(to left, var(--brand-lavender), var(--brand-iris));
+    transform-origin: right center;
+  }
+}
+.process-step[data-active] .process-dot {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 0 28px -6px var(--accent-glow);
+}
+
+/* ───────────────────────────── Clients marquee ───────────────────────────── */
+
+.marquee-track {
+  animation: marquee 38s linear infinite;
+}
+[dir='rtl'] .marquee-track {
+  animation-name: marquee-rtl;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes marquee-rtl {
+  to {
+    transform: translateX(50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  .marquee-track [data-duplicate] {
+    display: none;
+  }
+}
+
+/* Rich-text answers from the admin editor (FAQ). */
+.prose-answer > * + * {
+  margin-top: 0.85em;
+}
+.prose-answer ul,
+.prose-answer ol {
+  padding-inline-start: 1.25em;
+}
+.prose-answer ul {
+  list-style: disc;
+}
+.prose-answer ol {
+  list-style: decimal;
+}
+.prose-answer a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-answer strong {
+  color: var(--text);
+}
+
+/* ───────────────────────────── Page transition ───────────────────────────── */
+
+.page-transition > span {
+  transform: scale(0);
+  transition: transform 160ms var(--ease-out-expo);
+  transition-delay: calc(var(--d) * 120ms);
+  /* Overlap by 1px so no hairline gaps show between squares. */
+  margin: -0.5px;
+}
+.page-transition[data-phase='cover'] > span {
+  transform: scale(1.02);
+}
+.page-transition[data-phase='reveal'] > span {
+  transform: scale(0);
+  /* Reveal sweeps in the opposite order. */
+  transition-delay: calc((1 - var(--d)) * 120ms);
 }
 
 /* Pixel loader (loading.tsx). */

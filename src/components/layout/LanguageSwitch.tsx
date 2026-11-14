@@ -17,7 +17,7 @@ export function LanguageSwitch({ className, onNavigate }: { className?: string; 
       hrefLang={other}
       onClick={onNavigate}
       className={cn(
-        'inline-flex min-h-11 items-center gap-1.5 rounded-pill px-3 text-sm font-medium transition-colors hover:bg-surface-2',
+        'inline-flex min-h-11 items-center gap-1.5 rounded-pill px-3 text-sm font-bold transition-colors hover:bg-surface-2',
         className,
       )}
     >

@@ -13,7 +13,7 @@ export default function NotFound() {
     <section className="relative isolate flex min-h-[80dvh] items-center pt-24">
       <PixelField seed={404} />
       <div className="container-page flex flex-col items-start gap-6">
-        <p className="text-sm font-medium text-link">404</p>
+        <p className="text-sm font-bold text-link">404</p>
         <h1 className="max-w-3xl text-display">{t('misc.not_found_title')}</h1>
         <p className="max-w-xl text-lg text-muted">{t('misc.not_found_text')}</p>
         <Link href="/" className={buttonClasses('primary')}>

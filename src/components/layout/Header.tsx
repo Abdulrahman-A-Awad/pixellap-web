@@ -81,7 +81,7 @@ export function Header() {
                       href={item.href}
                       aria-current={active ? 'page' : undefined}
                       className={cn(
-                        'relative inline-flex min-h-11 items-center rounded-pill px-4 text-sm font-medium transition-colors',
+                        'relative inline-flex min-h-11 items-center rounded-pill px-4 text-sm transition-colors',
                         active ? 'text-text' : 'text-muted hover:text-text',
                       )}
                     >

@@ -1,16 +1,5 @@
 import { cn } from '@/lib/cn';
-
-/** Small deterministic PRNG so the field is identical on server and client. */
-function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+import { seededRandom } from '@/lib/random';
 
 const COLORS = ['var(--brand-royal)', 'var(--brand-iris)', 'var(--brand-lavender)'] as const;
 
@@ -31,7 +20,7 @@ interface PixelFieldProps {
  * Uses logical insets so it mirrors in RTL; lighter in light mode (--pixel-opacity).
  */
 export function PixelField({ seed = 7, cols = 24, rows = 12, density = 0.09, className }: PixelFieldProps) {
-  const random = mulberry32(seed);
+  const random = seededRandom(seed);
   const cells: { col: number; row: number; color: string; opacity: number }[] = [];
 
   for (let row = 0; row < rows; row++) {

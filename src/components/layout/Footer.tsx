@@ -20,7 +20,7 @@ const NETWORKS: Record<string, string> = {
 };
 
 function Heading({ children }: { children: ReactNode }) {
-  return <h2 className="mb-4 text-sm font-medium tracking-wide text-text">{children}</h2>;
+  return <h2 className="mb-4 text-sm font-bold tracking-wide text-text">{children}</h2>;
 }
 
 const linkClass = 'text-muted transition-colors hover:text-text';

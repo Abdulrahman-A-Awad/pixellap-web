@@ -6,6 +6,8 @@ import { Header } from '@/components/layout/Header';
 import { HeaderFallback } from '@/components/layout/HeaderFallback';
 import { MAIN_ID, SkipLink } from '@/components/layout/SkipLink';
 import { WhatsAppButton } from '@/components/layout/WhatsAppButton';
+import { PageTransition } from '@/components/motion/PageTransition';
+import { RevealObserver } from '@/components/motion/RevealObserver';
 import { SiteProvider } from '@/components/providers/SiteProvider';
 import { SmoothScroll } from '@/components/providers/SmoothScroll';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
@@ -55,6 +57,11 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
               <Footer site={site} t={t} />
               <WhatsAppButton />
               <VideoModal />
+              <RevealObserver />
+              {/* usePathname(): request-time on routes with unknown params. */}
+              <Suspense fallback={null}>
+                <PageTransition />
+              </Suspense>
             </SiteProvider>
           </NextIntlClientProvider>
         </ThemeProvider>

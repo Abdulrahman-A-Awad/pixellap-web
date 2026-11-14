@@ -1,4 +1,5 @@
-import Image from 'next/image';
+import Image, { getImageProps } from 'next/image';
+import { preload } from 'react-dom';
 import type { MediaAsset } from '@/lib/api/types';
 import { LOGO_CELLS, LOGO_GRID_SIZE } from '@/lib/brand/logoGrid';
 import { cn } from '@/lib/cn';
@@ -31,12 +32,17 @@ function MarkSvg({ shimmer, className }: { shimmer: boolean; className?: string 
 }
 
 /**
- * What the hero shows before (or instead of) the 3D scene. Server-renderable, no layout shift.
- * - Dark theme: the CMS poster (first frame of the loop video) — on desktop it sits on the
- *   inline-end half like the 3D cluster, fading towards the copy.
- * - Light theme, or no poster: the brand mark from the logo grid (the poster is a dark frame).
+ * What the hero shows before (or instead of) the 3D scene. Server-rendered, no layout shift.
+ *
+ * - Phones: always the inline-SVG brand mark. SVG shapes are not LCP candidates, so the
+ *   headline stays the LCP; the poster/video only arrive after the first interaction (SceneGate).
+ * - Desktop, dark theme: the CMS poster (first frame of the loop video) on the inline-end half,
+ *   fading towards the copy — high-priority preload scoped to desktop widths.
+ * - Desktop, light theme (the poster is a dark frame) or no poster: the brand mark.
  * `shimmer` adds a soft pixel pulse while the scene loads.
  */
+const POSTER_SIZES = '(min-width: 1024px) 58vw, 100vw';
+
 export function HeroPlaceholder({
   poster,
   shimmer,
@@ -48,21 +54,34 @@ export function HeroPlaceholder({
 }) {
   if (!poster) return <MarkSvg shimmer={shimmer} className={cn('flex', className)} />;
 
+  const src = poster.conversions?.lg ?? poster.url;
+  const sizes = POSTER_SIZES;
+
+  // Desktop only: high-priority preload (media-scoped, same srcset → the <img> reuses it).
+  const { props } = getImageProps({ src, alt: '', fill: true, sizes });
+  preload(props.src, {
+    as: 'image',
+    fetchPriority: 'high',
+    imageSrcSet: props.srcSet,
+    imageSizes: props.sizes,
+    media: '(min-width: 1024px)',
+  });
+
   return (
     <div className={cn('absolute inset-0', className)}>
-      <div className="hero-poster-mask absolute inset-0 lg:start-auto lg:w-[58%] light:hidden">
+      {/* display:none + loading="lazy" on phones → never downloaded there. */}
+      <div className="hero-poster-mask absolute inset-0 hidden lg:start-auto lg:block lg:w-[58%] light:hidden">
         <Image
-          src={poster.conversions?.lg ?? poster.url}
+          src={src}
           alt=""
           fill
-          sizes="(min-width: 1024px) 58vw, 100vw"
+          sizes={sizes}
+          loading="lazy"
+          fetchPriority="low"
           className={cn('object-cover', shimmer && 'motion-safe:animate-pulse')}
-          // The poster is the LCP on phones (video tier): fetch it first (Next 16: not `priority`).
-          loading="eager"
-          fetchPriority="high"
         />
       </div>
-      <MarkSvg shimmer={shimmer} className="hidden light:flex" />
+      <MarkSvg shimmer={shimmer} className="flex lg:hidden light:lg:flex" />
     </div>
   );
 }

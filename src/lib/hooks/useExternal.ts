@@ -103,6 +103,28 @@ function createIdleSubscriber(timeout: number) {
   };
 }
 
+let interacted = false;
+const INTERACTION_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'] as const;
+function subscribeInteraction(onChange: () => void): () => void {
+  if (interacted) return () => {};
+  const done = () => {
+    interacted = true;
+    INTERACTION_EVENTS.forEach((e) => window.removeEventListener(e, done));
+    onChange();
+  };
+  INTERACTION_EVENTS.forEach((e) => window.addEventListener(e, done, { passive: true, once: true }));
+  return () => INTERACTION_EVENTS.forEach((e) => window.removeEventListener(e, done));
+}
+
+/** True after the visitor's first interaction (scroll, wheel, touch, pointer or key). */
+export function useFirstInteraction(): boolean {
+  return useSyncExternalStore(
+    subscribeInteraction,
+    () => interacted,
+    () => false,
+  );
+}
+
 /** Tells whether the component is hydrated on the client (false on the server render). */
 export function useHydrated(): boolean {
   return useSyncExternalStore(

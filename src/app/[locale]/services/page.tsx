@@ -37,7 +37,7 @@ export default async function ServicesPage({ params }: PageProps<'/[locale]/serv
                 href={`/services/${category.slug}`}
                 className="group flex h-full flex-col gap-2 rounded-card border border-border bg-surface p-5 transition-colors hover:border-primary"
               >
-                <span className="font-medium">{category.title}</span>
+                <span className="font-bold">{category.title}</span>
                 <span className="text-sm text-muted">{category.excerpt}</span>
                 <span className="mt-auto inline-flex items-center gap-2 pt-2 text-sm text-link">
                   {category.services_count}
