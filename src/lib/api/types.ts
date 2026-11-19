@@ -139,6 +139,7 @@ export type HomeSectionKey =
 /** Fields every section carries. Unused fields for a section are always null. */
 interface HomeSectionBase<K extends HomeSectionKey> {
   key: K;
+  /** every section except contact_cta */
   eyebrow: string | null;
   title: string | null;
   subtitle: PlainText | null;
@@ -146,7 +147,7 @@ interface HomeSectionBase<K extends HomeSectionKey> {
   cta: Link | null;
   /** hero only */
   cta2: Link | null;
-  /** about, contact_cta */
+  /** about only */
   image: MediaAsset | null;
 }
 
@@ -170,8 +171,6 @@ export interface HomeCategoryCard {
 export interface ProcessStep {
   title: string;
   description: PlainText;
-  /** Icon name (lucide-style), e.g. "search", "rocket". */
-  icon: string | null;
 }
 
 export interface ClientLogo {
