@@ -57,8 +57,12 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 
 - `components/sections/hero/`: `Hero` (server copy = LCP) → `HeroStage` (sticky pin, GSAP scrub → `progress` ref)
   → `SceneGate` (tier decision, poster/video/scene, pause off-screen) → `three/PixelScene` (dynamic, ssr:false).
-- Tiers (`src/lib/device.ts`): static (reduced motion / no WebGL2) · video (weak mobile or Save-Data, needs the
-  CMS loop video) · low (32 cubes, no postfx, dpr ≤ 1.25) · high. `PerformanceMonitor` drops high→low once.
+- Tiers (`src/lib/device.ts`): static (reduced motion / no WebGL2 → matching poster) · video (weak mobile or Save-Data,
+  needs a CMS loop video) · low (32 cubes, no postfx, dpr ≤ 1.25) · high. `PerformanceMonitor` drops high→low once.
+- Loop videos: `hero.media.{wide,vertical}.{webm,mp4,poster}` (`lib/hero/media.ts`). Vertical when
+  `(max-width: 767px), (orientation: portrait)`. `HeroFrame` + `.hero-frame` CSS: the frame's aspect ratio crops the
+  logo/text out of the supplied loops (wide = inline-end square, vertical = bottom); dark = radial vignette, light =
+  rounded black stage card. Desktop loads the video at once; phones after idle + first interaction (LCP stays the copy).
   **Dev only:** force with `?tier=high|low|video|static`.
 - All cube motion is in ONE `useFrame` (`three/PixelCubes.tsx`); layouts are precomputed in `three/layouts.ts`.
   Never add React state per frame. Scratch objects live in refs (React Compiler forbids mutating memo values).
@@ -79,7 +83,10 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   (keeps the headline as LCP).
 - Islands: `useInView` / `observe()` (`lib/hooks/useInView.ts`) share observers; GSAP is only ever `import()`ed after
   idle (`StackingCards`, `HeroStage`, `SmoothScroll`). Never import gsap/motion statically in always-loaded code.
-- Fonts: IBM Plex Sans Arabic 400 + 700 only — use `font-normal` / `font-bold` (no light/medium/semibold).
+- Fonts: brand font RH-Zak (Arabic + Latin, `next/font/local`): Regular 400 + Bold 700 preloaded — use `font-normal` /
+  `font-bold`. Thin 100 is a separate, non-preloaded face for large display text only (`font-display-thin`, ≥ 2.5rem).
+  RH-Zak has no "·", "…", arrows or tabular figures: never put "·" in copy/UI; counters use `digits-fixed` (+ `--len`).
+  No letter-spacing in Arabic (forced to 0 globally).
 - Numbers inside RTL text: wrap in `<bdi dir="ltr">`. Pixel numerals: `brand/PixelDigits`.
 - Page transitions: `motion/PageTransition` (CSS pixel grid, same-locale internal links only, focus → `<main>`).
 - Prefer zero-JS patterns: FAQ = native `<details name="faq-{scope}">` (`home/FaqSection`, reused on category pages);
@@ -114,5 +121,7 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 
 - `src/app/[locale]/` — pages (root layout is `[locale]/layout.tsx`: `<html lang dir>`, providers, header/footer).
 - `src/components/{layout,brand,contact,sections,providers,ui,three}` · `src/lib/*` · `src/styles/{globals.css,fonts.ts}`.
-- Fonts: only `src/styles/fonts.ts` (IBM Plex Sans Arabic now; swap to RH-Zak via next/font/local there).
+- Fonts: only `src/styles/fonts.ts` (woff2 files in `public/fonts/`; metric overrides re-centre text in buttons/pills).
+- Icons: `src/app/{favicon.ico,icon.svg,apple-icon.png}` + `app/manifest.ts` (`public/icons/`). Fallback share image:
+  `public/og-default.jpg` (used by `buildMetadata` after the page image and `settings.og_image`).
 - Brand assets: `public/brand/` (logo / mark, color and white variants).

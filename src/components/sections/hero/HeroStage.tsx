@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, type ReactNode } from 'react';
 import type { PointerState } from '@/components/three/PixelCubes';
-import type { MediaAsset } from '@/lib/api/types';
+import type { HeroMedia } from '@/lib/api/types';
 import { useIdleAfterLoad } from '@/lib/hooks/useExternal';
 import { HERO_TITLE_ID } from './ids';
 import { SceneGate } from './SceneGate';
 
 interface HeroStageProps {
-  poster: MediaAsset | null;
-  video: MediaAsset | null;
+  media: HeroMedia;
   children: ReactNode;
 }
 
@@ -19,7 +18,7 @@ interface HeroStageProps {
  * writes `progress` (0→1) for the scene and hands the copy over to the next section at 0.85–1.
  * Mobile: scene (60svh) above the copy, normal flow; progress still follows the scroll.
  */
-export function HeroStage({ poster, video, children }: HeroStageProps) {
+export function HeroStage({ media, children }: HeroStageProps) {
   const section = useRef<HTMLElement>(null);
   const progress = useRef(0);
   const pointer = useRef<PointerState>({ x: 0, y: 0, lastMove: 0 });
@@ -93,8 +92,7 @@ export function HeroStage({ poster, video, children }: HeroStageProps) {
     <section ref={section} aria-labelledby={HERO_TITLE_ID} className="relative lg:motion-safe:h-[250svh]">
       <div data-hero-stage className="relative isolate lg:sticky lg:top-0 lg:h-svh lg:min-h-[40rem] lg:overflow-hidden">
         <SceneGate
-          poster={poster}
-          video={video}
+          media={media}
           progress={progress}
           pointer={pointer}
           // Mobile: decorative area capped at 42svh so the headline is the dominant (LCP) element.

@@ -1,9 +1,9 @@
 /**
  * Hero rendering tier, decided on the client once per page load.
  *
- *  static → prefers-reduced-motion OR no WebGL2 → poster / brand mark, no motion
+ *  static → prefers-reduced-motion OR no WebGL2 → matching poster / brand mark, no motion
  *  video  → (mobile AND (deviceMemory ≤ 4 OR hardwareConcurrency ≤ 4)) OR Save-Data
- *           → the CMS loop video (falls back to 'low' when there is none)
+ *           → the CMS loop video, wide or vertical cut (falls back to 'low' when there is none)
  *  low    → 32 cubes, no postprocessing, dpr ≤ 1.25
  *  high   → everything
  *

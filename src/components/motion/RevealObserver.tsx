@@ -16,6 +16,7 @@ const SELECTOR = '[data-reveal]:not([data-reveal-state])';
 export function RevealObserver() {
   useEffect(() => {
     const stops: (() => void)[] = [];
+    const pending = new Set<HTMLElement>();
 
     const track = (root: ParentNode) => {
       const vh = window.innerHeight;
@@ -25,11 +26,13 @@ export function RevealObserver() {
           return;
         }
         el.setAttribute('data-reveal-state', 'pending');
+        pending.add(el);
         const stop = observe(
           el,
           (entry) => {
             if (!entry.isIntersecting) return;
             el.setAttribute('data-reveal-state', 'shown');
+            pending.delete(el);
             stop();
           },
           0.12,
@@ -47,6 +50,9 @@ export function RevealObserver() {
     return () => {
       mutations.disconnect();
       stops.forEach((stop) => stop());
+      // Un-mark what is still hidden, so a re-mount (StrictMode, HMR) tracks it again
+      // instead of leaving it hidden for good.
+      pending.forEach((el) => el.removeAttribute('data-reveal-state'));
     };
   }, []);
 

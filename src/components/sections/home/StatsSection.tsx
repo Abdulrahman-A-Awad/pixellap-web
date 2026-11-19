@@ -52,15 +52,20 @@ export function StatsSection({
               )}
             >
               <dt className="text-sm text-muted md:text-base">{stat.label}</dt>
-              <dd className="text-[clamp(2.5rem,5vw,4.5rem)] leading-none font-bold tracking-tight">
+              <dd className="text-[clamp(2.75rem,5.5vw,5rem)] leading-none">
                 {/* Numbers stay LTR inside RTL text. */}
-                <bdi dir="ltr" className="inline-flex items-baseline">
-                  {stat.prefix && <span className="text-primary">{stat.prefix}</span>}
+                <bdi dir="ltr" className="inline-flex items-baseline gap-0.5">
+                  {stat.prefix && <span className="font-bold text-primary">{stat.prefix}</span>}
                   {/* Pure-CSS count-up (globals.css .stat-count): the real number stays in the DOM. */}
-                  <span data-reveal className="stat-count tabular-nums" style={{ '--to': stat.value } as CSSProperties}>
+                  {/* Thin brand face for the big figure; fixed width so the count-up does not jitter. */}
+                  <span
+                    data-reveal
+                    className="stat-count digits-fixed font-display-thin"
+                    style={{ '--to': stat.value, '--len': String(stat.value).length } as CSSProperties}
+                  >
                     <span className="stat-final">{stat.value.toLocaleString('en-US')}</span>
                   </span>
-                  {stat.suffix && <span className="text-primary">{stat.suffix}</span>}
+                  {stat.suffix && <span className="font-bold text-primary">{stat.suffix}</span>}
                 </bdi>
               </dd>
             </div>

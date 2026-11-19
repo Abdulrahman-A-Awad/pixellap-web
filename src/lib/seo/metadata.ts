@@ -15,6 +15,9 @@ interface PageSeo {
   image?: string | null;
 }
 
+/** public/og-default.jpg — 1200×630 brand image (cube + tagline), used when nothing else is set. */
+const DEFAULT_OG_IMAGE = '/og-default.jpg';
+
 function localizedUrl(locale: string, path: string): string {
   return `${SITE_URL}/${locale}${path === '/' ? '' : path}`;
 }
@@ -29,8 +32,8 @@ export async function buildMetadata({ locale, path, title, description, image }:
   const resolvedTitle = title || settings.seo_default_title;
   const resolvedDescription = description || settings.seo_default_description;
   const url = localizedUrl(locale, path);
-  // Page image first, then the site-wide sharing image from settings.
-  image = image || settings.og_image;
+  // Page image first, then the site-wide sharing image from settings, then the bundled brand image.
+  const ogImage = image || settings.og_image || DEFAULT_OG_IMAGE;
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -51,13 +54,12 @@ export async function buildMetadata({ locale, path, title, description, image }:
       description: resolvedDescription,
       locale: locale === 'ar' ? 'ar_AE' : 'en_AE',
       alternateLocale: locale === 'ar' ? ['en_AE'] : ['ar_AE'],
-      ...(image ? { images: [{ url: image }] } : {}),
+      images: [ogImage === DEFAULT_OG_IMAGE ? { url: ogImage, width: 1200, height: 630 } : { url: ogImage }],
     },
     twitter: {
-      card: image ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title: resolvedTitle,
       description: resolvedDescription,
     },
-    icons: { icon: '/brand/pixellap-mark.svg' },
   };
 }

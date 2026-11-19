@@ -25,12 +25,12 @@ export function Hero({ hero, stats, settings, t }: HeroProps) {
   const title = hero.title ?? settings.tagline;
 
   return (
-    <HeroStage poster={hero.image} video={hero.video}>
+    <HeroStage media={hero.media}>
       {/* Scrim: keeps the copy readable over the scene (start side on desktop, bottom on mobile). */}
       <div aria-hidden="true" className="hero-scrim pointer-events-none absolute inset-0 hidden lg:block" />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-[calc(max(42svh,16rem)-6rem)] h-24 bg-linear-to-b from-transparent to-bg lg:hidden"
+        className="pointer-events-none absolute inset-x-0 top-[calc(max(42svh,16rem)-6rem)] h-24 bg-linear-to-b from-transparent to-bg lg:hidden light:hidden"
       />
 
       <div data-hero-copy className="relative lg:absolute lg:inset-0 lg:flex lg:items-center">

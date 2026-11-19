@@ -15,9 +15,10 @@ import { VideoModal } from '@/components/ui/VideoModal';
 import { resolveLocale } from '@/i18n/locale';
 import { isRtl, routing } from '@/i18n/routing';
 import { getSite } from '@/lib/api/endpoints';
+import { cn } from '@/lib/cn';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { createTranslator } from '@/lib/site/translate';
-import { fontSans } from '@/styles/fonts';
+import { fontSans, fontThin } from '@/styles/fonts';
 import '@/styles/globals.css';
 
 export function generateStaticParams() {
@@ -30,6 +31,7 @@ export async function generateMetadata({ params }: LayoutProps<'/[locale]'>): Pr
 }
 
 export const viewport: Viewport = {
+  // Dark is the default theme; ThemeColorSync switches it to the active theme's --bg.
   themeColor: [{ color: '#06030F' }],
   colorScheme: 'dark light',
 };
@@ -40,7 +42,12 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
   const t = createTranslator(site.ui_strings);
 
   return (
-    <html lang={locale} dir={isRtl(locale) ? 'rtl' : 'ltr'} className={fontSans.variable} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={isRtl(locale) ? 'rtl' : 'ltr'}
+      className={cn(fontSans.variable, fontThin.variable)}
+      suppressHydrationWarning
+    >
       <body className="min-h-dvh">
         <ThemeProvider>
           <NextIntlClientProvider locale={locale} messages={{}}>

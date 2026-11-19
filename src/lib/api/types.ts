@@ -126,7 +126,15 @@ export type SiteResponse = ApiEnvelope<Site>;
 
 /* ────────────────────────────────── /home ─────────────────────────────────── */
 
-export type HomeSectionKey = 'hero' | 'stats' | 'services' | 'process' | 'clients' | 'about' | 'faq' | 'contact_cta';
+export type HomeSectionKey =
+  | 'hero'
+  | 'stats'
+  | 'services'
+  | 'process'
+  | 'clients'
+  | 'about'
+  | 'faq'
+  | 'contact_cta';
 
 /** Fields every section carries. Unused fields for a section are always null. */
 interface HomeSectionBase<K extends HomeSectionKey> {
@@ -138,10 +146,8 @@ interface HomeSectionBase<K extends HomeSectionKey> {
   cta: Link | null;
   /** hero only */
   cta2: Link | null;
-  /** hero, about, contact_cta */
+  /** about, contact_cta */
   image: MediaAsset | null;
-  /** hero only */
-  video: MediaAsset | null;
 }
 
 export interface HomeStat {
@@ -174,7 +180,26 @@ export interface ClientLogo {
   logo: MediaAsset | null;
 }
 
-export type HeroSection = HomeSectionBase<'hero'>;
+/** One orientation of the hero loop video: absolute URLs, null when not uploaded. */
+export interface HeroLoopVideo {
+  /** video/webm — list first in <source>. */
+  webm: string | null;
+  /** video/mp4 (H.264) — fallback <source>. */
+  mp4: string | null;
+  /** First frame (webp/jpeg/png): the video poster and the static hero. */
+  poster: string | null;
+}
+
+export interface HeroMedia {
+  /** Desktop / landscape. */
+  wide: HeroLoopVideo;
+  /** Phones / portrait. */
+  vertical: HeroLoopVideo;
+}
+
+export interface HeroSection extends HomeSectionBase<'hero'> {
+  media: HeroMedia;
+}
 export type AboutSection = HomeSectionBase<'about'>;
 export interface StatsSection extends HomeSectionBase<'stats'> {
   items: HomeStat[];
@@ -338,7 +363,13 @@ export type ContactResponse = ApiEnvelope<{ message: string }>;
 /* ───────────────────────── Revalidation webhook (in) ──────────────────────── */
 
 /** Cache tags the API sends to the frontend revalidate route. */
-export type CacheTag = 'site' | 'home' | 'categories' | 'sitemap' | `category:${string}` | `page:${PageKey}`;
+export type CacheTag =
+  | 'site'
+  | 'home'
+  | 'categories'
+  | 'sitemap'
+  | `category:${string}`
+  | `page:${PageKey}`;
 
 /** Body of POST {FRONTEND_REVALIDATE_URL} (header X-Revalidate-Secret). */
 export interface RevalidatePayload {

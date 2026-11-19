@@ -59,7 +59,7 @@
 /*
  * Tailwind theme → utilities (bg-surface, text-muted, border-border, rounded-card…).
  * `inline` keeps the var() references so classes follow the active theme.
- * --font-sans comes from next/font (src/styles/fonts.ts) and is not redefined here.
+ * --font-sans / --font-thin come from next/font (src/styles/fonts.ts) and are not redefined here.
  */
 @theme inline {
   --color-royal: var(--brand-royal);
@@ -97,7 +97,7 @@
 
 @layer base {
   html {
-    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans), system-ui, sans-serif;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
   }
@@ -107,16 +107,23 @@
     color: var(--text);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    /* RH-Zak's space glyph is very narrow ("Small Pixels.BIG"): open words up a little. */
+    word-spacing: 0.12em;
     /* Smooth theme change; next-themes disables transitions during the actual switch. */
     transition:
       background-color 300ms ease,
       color 300ms ease;
   }
 
-  /* Arabic script needs more vertical room. */
+  /* Arabic script needs more vertical room (RH-Zak has tall ascenders and deep descenders). */
   :lang(ar) body,
   body:lang(ar) {
-    line-height: 1.8;
+    line-height: 1.85;
+  }
+
+  /* Never track Arabic: spacing breaks the joins between letters. */
+  :lang(ar) * {
+    letter-spacing: 0 !important;
   }
 
   ::selection {
@@ -145,29 +152,47 @@
   padding-inline: clamp(1rem, 4vw, 2.5rem);
 }
 
-/* Display headings. Tight tracking only in Latin script. */
+/* Display headings. Tight tracking only in Latin script (none in Arabic). */
 @utility text-display {
   font-size: clamp(2.5rem, 6vw, 6rem);
-  line-height: 1.02;
+  line-height: 1.05;
   font-weight: 700;
-  letter-spacing: -0.035em;
-
-  &:lang(ar) {
-    letter-spacing: 0;
-    line-height: 1.25;
-  }
-}
-
-@utility text-heading {
-  font-size: clamp(1.75rem, 3.5vw, 3rem);
-  line-height: 1.1;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 
   &:lang(ar) {
     letter-spacing: 0;
     line-height: 1.35;
   }
+}
+
+@utility text-heading {
+  font-size: clamp(1.75rem, 3.5vw, 3rem);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+
+  &:lang(ar) {
+    letter-spacing: 0;
+    line-height: 1.45;
+  }
+}
+
+/*
+ * RH-Zak Thin: large display text only (≥ 2.5rem — it is illegible small). Not preloaded:
+ * the bold fallback face shows until it arrives.
+ */
+@utility font-display-thin {
+  font-family: var(--font-thin), var(--font-sans), system-ui, sans-serif;
+  font-weight: 100;
+}
+
+/*
+ * RH-Zak has no tabular figures, so a counting number changes width every frame. Reserve the
+ * final width (--len = number of characters, ~0.5em per digit) so the suffix does not jiggle.
+ */
+@utility digits-fixed {
+  display: inline-block;
+  min-width: calc(var(--len, 1) * 0.5em);
 }
 
 /* ───────────────────────────── Motion ───────────────────────────── */
@@ -239,14 +264,75 @@ html.lenis body {
   --scrim-dir: to left;
 }
 
-/* Desktop poster: fades out towards the copy (inline-start side; mirrors in RTL). */
+/*
+ * Hero poster / loop video frame (HeroFrame).
+ *
+ * The supplied loops carry the logo + "Small Pixels. BIG IMPACT." text (left third of the wide cut,
+ * top 40% of the vertical cut). The frame's aspect ratio does the cropping, at every viewport:
+ *  - wide: a square on the inline-end side, media anchored to the cube side → right ~56% only;
+ *  - vertical: at least as wide as tall, anchored to the bottom → the lower half (the cube) only.
+ * Dark: a radial vignette on the media melts the video's own black (~#030303) into --bg (#06030F),
+ * so no rectangle edge shows (it mirrors with the media in RTL).
+ * Light: the dark video sits in a rounded black "stage" card instead.
+ */
+.hero-frame {
+  position: absolute;
+  overflow: hidden;
+}
+.hero-frame-wide {
+  inset-block: 0;
+  inset-inline: auto 0;
+  aspect-ratio: 1;
+  max-width: 100%;
+}
+.hero-frame-vertical {
+  inset-inline: 0;
+  inset-block: auto 0;
+  aspect-ratio: 1;
+  max-height: 100%;
+}
+.hero-frame-media {
+  mask-image: radial-gradient(closest-side at 50% 52%, #000 50%, transparent 100%);
+}
+
+.light .hero-frame {
+  border-radius: 28px;
+  background: var(--brand-black);
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 40px 90px -40px var(--accent-glow);
+}
+.light .hero-frame-media {
+  mask-image: none;
+}
+.light .hero-frame-wide {
+  inset-block: 0.75rem;
+  inset-inline-end: clamp(1rem, 4vw, 2.5rem);
+}
+.light .hero-frame-vertical {
+  /* Below the (transparent, overlaid) header; still wider than tall → the text stays cropped. */
+  inset-block: 4.75rem 0.75rem;
+  inset-inline: clamp(1rem, 4vw, 2.5rem);
+  /* Size from the insets, not the ratio. */
+  aspect-ratio: auto;
+  max-height: none;
+}
 @media (min-width: 1024px) {
-  .hero-poster-mask {
-    --mask-dir: to right;
-    mask-image: linear-gradient(var(--mask-dir), transparent 0%, #000 45%);
+  .hero-frame-wide {
+    inset-block: 5%;
   }
-  [dir='rtl'] .hero-poster-mask {
-    --mask-dir: to left;
+  .light .hero-frame-wide {
+    inset-block: 20%;
+    inset-inline-end: 5%;
+  }
+}
+/* Media frame arriving over the placeholder. */
+.hero-frame-in {
+  animation: hero-frame-in 0.7s var(--ease-out-expo) both;
+}
+@keyframes hero-frame-in {
+  from {
+    opacity: 0;
   }
 }
 
