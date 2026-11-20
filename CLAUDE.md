@@ -62,7 +62,8 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Loop videos: `hero.media.{wide,vertical}.{webm,mp4,poster}` (`lib/hero/media.ts`). Vertical when
   `(max-width: 767px), (orientation: portrait)`. `HeroFrame` + `.hero-frame` CSS: the loops are clean (cube only), shown
   full-frame with object-fit cover (wide = anchored to the inline-end side, mirrored in RTL; vertical = bottom);
-  dark = fills the stage with an edge mask, light = rounded black stage card (16:9 beside the copy on desktop). Desktop loads the video at once; phones after idle + first interaction (LCP stays the copy).
+  dark = edge-masked (desktop: exact 16:9 layer ≤ 72% wide on the end side, copy capped at min(46vw, 620px) so they
+  never overlap), light = rounded black stage card (16:9 beside the copy on desktop). Desktop loads the video at once; phones after idle + first interaction (LCP stays the copy).
   **Dev only:** force with `?tier=high|low|video|static`.
 - All cube motion is in ONE `useFrame` (`three/PixelCubes.tsx`); layouts are precomputed in `three/layouts.ts`.
   Never add React state per frame. Scratch objects live in refs (React Compiler forbids mutating memo values).
@@ -76,8 +77,11 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 
 - Home renders `/home` sections in API order (`app/[locale]/page.tsx` → `renderSection`). Sections live in
   `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `PageHero`, `ui/CtaLink`.
-- **Reveal on scroll:** add `data-reveal` (stagger with `style={{'--reveal-i': n}}`). `motion/RevealObserver` (one shared
-  IntersectionObserver) only hides elements that start below the fold, so above-the-fold text never waits for JS.
+- **Reveal on scroll:** add `data-reveal` (stagger with `style={{'--reveal-i': n}}`). Pure CSS scroll-driven animation
+  (`animation-timeline: view()`, in `@supports` + no-preference motion): no JS, never touches server HTML; on-screen
+  content is already in its final state; unsupported browsers just show it. Ancestors of `[data-reveal]` must use
+  `overflow-clip`, never `overflow-hidden` (that makes them the scroll container `view()` tracks).
+  Never mutate server-rendered DOM from outside React (attributes before hydration → hydration mismatch).
 - **Above-the-fold text is always plain server HTML** (no JS-gated or opacity-0 animations). The hero title reveal is
   pure CSS and starts at opacity 0.001. Phones: the hero visual is an inline SVG until first interaction
   (keeps the headline as LCP).
@@ -90,7 +94,7 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Numbers inside RTL text: wrap in `<bdi dir="ltr">`. Pixel numerals: `brand/PixelDigits`.
 - Page transitions: `motion/PageTransition` (CSS pixel grid, same-locale internal links only, focus → `<main>`).
 - Prefer zero-JS patterns: FAQ = native `<details name="faq-{scope}">` (`home/FaqSection`, reused on category pages);
-  stat counters = CSS `@property --n` + `.stat-count` driven by the reveal observer (no island).
+  stat counters = CSS `@property --n` + `.stat-count`, triggered by the tiny `home/StatCount` island (`data-count` in React state).
 - Plurals: `plural(t, locale, 'services.count', n)` (`lib/site/format.ts`) picks `{base}_{Intl.PluralRules category}`
   — Arabic needs zero/one/two/few/many/other keys in the seeder. `interpolate()` fills `{placeholders}`.
 - Services: `/services` = `services/ServicesBento` (fixed 2-large + 4-medium layout); `/services/[slug]` = CategoryHero

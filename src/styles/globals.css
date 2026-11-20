@@ -299,7 +299,26 @@ html.lenis body {
 .light .hero-frame-media {
   mask-image: none;
 }
+/* Phones, light card: a little above the bottom so the top of the cube is not trimmed. */
+.light .hero-frame-vertical .hero-frame-media {
+  object-position: 50% 85%;
+}
 @media (min-width: 1024px) {
+  /*
+   * Desktop dark: an exact 16:9 layer (cover crops nothing) on the inline-end side, slightly past the
+   * edge. The animation spans ~30%-93% of the cut's width, so with --w ≤ 72% it starts beyond the
+   * middle of the screen: the copy column (≤ min(46vw, 620px)) never overlaps the cube or the
+   * flying cubes. 160svh caps the height at 90% of the stage on short / ultra-wide screens.
+   */
+  .hero-frame-wide {
+    --w: min(72%, 160svh);
+    inset-block: 0;
+    inset-inline: auto calc(var(--w) * -0.05);
+    margin-block: auto;
+    width: var(--w);
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
   /* Desktop light: a 16:9 card (the whole cut) on the inline-end side, vertically centred. */
   .light .hero-frame-wide {
     inset-block: 0;
@@ -375,18 +394,25 @@ html.lenis body {
 /* ───────────────────────────── Reveal on scroll ───────────────────────────── */
 
 /*
- * [data-reveal] elements that start below the fold are marked pending by RevealObserver and
- * fade/slide in when they scroll into view. Nothing is hidden without JS, before hydration,
- * for content already on screen, or under reduced motion.
+ * Pure CSS, scroll-driven: [data-reveal] fades/slides in while it enters the viewport (no JS, so
+ * the server HTML is never touched → no hydration mismatch). The animation's progress follows the
+ * element's position, so anything already on screen at load is simply in its final state.
+ * --reveal-i staggers siblings by shifting their range. Browsers without scroll timelines and
+ * reduced motion: content is just shown.
+ * Note: view() tracks the nearest scroll container — ancestors of [data-reveal] use overflow-clip,
+ * never overflow-hidden (which would make them the scroller).
  */
-@media (prefers-reduced-motion: no-preference) {
-  [data-reveal-state] {
-    transition:
-      opacity 0.7s var(--ease-out-expo),
-      transform 0.8s var(--ease-out-expo);
-    transition-delay: calc(var(--reveal-i, 0) * 70ms);
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-reveal] {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--reveal-i, 0) * 6%) entry calc(40% + var(--reveal-i, 0) * 6%);
+    }
   }
-  [data-reveal-state='pending'] {
+}
+@keyframes reveal-in {
+  from {
     opacity: 0;
     transform: translateY(28px);
   }
@@ -395,10 +421,10 @@ html.lenis body {
 /* ───────────────────────────── Stats count-up (pure CSS) ───────────────────────────── */
 
 /*
- * The DOM holds the final number (no JS, crawlers, screen readers). When RevealObserver marks the
- * element (data-reveal-state) and motion is allowed, the visible digits come from a CSS counter
- * driven by the registered integer --n, which transitions 0 → --to once the element is shown.
- * Elements already on screen at load go straight to "shown" and simply show the final value.
+ * The DOM holds the final number (no JS, crawlers, screen readers). StatCount (a tiny island) sets
+ * data-count from React state AFTER hydration: "pending" for numbers below the fold, "run" when they
+ * scroll in. Then the visible digits come from a CSS counter driven by the registered integer --n,
+ * which transitions 0 → --to. Numbers already on screen at load keep their final value.
  */
 @property --n {
   syntax: '<integer>';
@@ -406,22 +432,19 @@ html.lenis body {
   initial-value: 0;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .stat-count[data-reveal-state] {
+  .stat-count[data-count] {
     --n: 0;
     counter-reset: n var(--n);
-    /* Counting is the effect here — no slide/fade on the number itself. */
-    opacity: 1 !important;
-    transform: none !important;
   }
-  .stat-count[data-reveal-state='shown'] {
+  .stat-count[data-count='run'] {
     --n: var(--to);
-    transition: --n 1.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: --n 1.4s var(--ease-out-expo);
   }
-  .stat-count[data-reveal-state]::after {
+  .stat-count[data-count]::after {
     content: counter(n);
   }
   /* Visually hidden, still announced. */
-  .stat-count[data-reveal-state] > .stat-final {
+  .stat-count[data-count] > .stat-final {
     position: absolute;
     width: 1px;
     height: 1px;

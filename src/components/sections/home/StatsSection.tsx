@@ -3,6 +3,7 @@ import { PixelField } from '@/components/brand/PixelField';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import type { HomeStat } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
+import { StatCount } from './StatCount';
 
 /** Big counters with thin dividers; 2×2 on mobile, one row on desktop. */
 export function StatsSection({
@@ -25,7 +26,7 @@ export function StatsSection({
     <section
       id={id}
       aria-labelledby={title ? headingId : undefined}
-      className="relative isolate overflow-hidden py-20 md:py-28"
+      className="relative isolate overflow-clip py-20 md:py-28"
     >
       <PixelField seed={21} rows={8} density={0.035} className="opacity-50" />
       <div className="container-page flex flex-col gap-12">
@@ -56,15 +57,8 @@ export function StatsSection({
                 {/* Numbers stay LTR inside RTL text. */}
                 <bdi dir="ltr" className="inline-flex items-baseline gap-0.5">
                   {stat.prefix && <span className="font-bold text-primary">{stat.prefix}</span>}
-                  {/* Pure-CSS count-up (globals.css .stat-count): the real number stays in the DOM. */}
-                  {/* Thin brand face for the big figure; fixed width so the count-up does not jitter. */}
-                  <span
-                    data-reveal
-                    className="stat-count digits-fixed font-display-thin"
-                    style={{ '--to': stat.value, '--len': String(stat.value).length } as CSSProperties}
-                  >
-                    <span className="stat-final">{stat.value.toLocaleString('en-US')}</span>
-                  </span>
+                  {/* CSS count-up (globals.css .stat-count): the real number stays in the DOM. */}
+                  <StatCount value={stat.value} />
                   {stat.suffix && <span className="font-bold text-primary">{stat.suffix}</span>}
                 </bdi>
               </dd>

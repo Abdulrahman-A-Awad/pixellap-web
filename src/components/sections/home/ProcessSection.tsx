@@ -11,7 +11,7 @@ export function ProcessSection({ section }: { section: ProcessData }) {
   if (section.steps.length === 0) return null;
 
   return (
-    <section id="process" aria-labelledby="process-title" className="relative isolate overflow-hidden py-20 md:py-28">
+    <section id="process" aria-labelledby="process-title" className="relative isolate overflow-clip py-20 md:py-28">
       <PixelField seed={33} rows={9} density={0.03} className="opacity-50" />
       <div className="container-page flex flex-col gap-14">
         <SectionHeading

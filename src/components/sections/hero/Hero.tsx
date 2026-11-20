@@ -35,7 +35,8 @@ export function Hero({ hero, stats, settings, t }: HeroProps) {
 
       <div data-hero-copy className="relative lg:absolute lg:inset-0 lg:flex lg:items-center">
         <div className="container-page">
-          <div className="max-w-2xl py-10 lg:py-0">
+          {/* Desktop: capped so the copy stays in the start half, clear of the cube (.hero-frame-wide). */}
+          <div className="max-w-2xl py-10 lg:max-w-[min(46vw,620px)] lg:py-0">
             {hero.eyebrow && (
               <p className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-link">
                 <span aria-hidden="true" className="size-2 rounded-[2px] bg-primary" />
