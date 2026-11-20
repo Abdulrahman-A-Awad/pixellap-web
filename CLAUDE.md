@@ -108,6 +108,8 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 ## Production
 
 - Domain: `https://ppixelmedia.com` (www → apex); API at `https://api.ppixelmedia.com/api/v1` (brand name stays "Pixellap").
+- Pre-launch: `PRELAUNCH=true` (server env, read at build, `src/lib/prelaunch.ts`) → robots.txt `Disallow: /` and
+  `robots: noindex, nofollow` in `buildMetadata()`. Nginx adds basic auth + X-Robots-Tag. Go-live steps: API runbook §13.
 - Runs with `next start` under PM2 (`ecosystem.config.cjs`, 1 instance, 127.0.0.1:3000) behind Nginx; deploy kit and
   runbook in `../pixellap-api/deploy/README.md` (`deploy-web.sh` builds each release in its own folder, `current` symlink,
   `--rollback`). Env template: `.env.production.example` (values are baked in at build time).
