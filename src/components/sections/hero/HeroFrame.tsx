@@ -3,11 +3,12 @@ import type { HeroOrientation } from '@/lib/hero/media';
 import { cn } from '@/lib/cn';
 
 /**
- * Anchor each cut on its cube; the frame's aspect ratio crops the logo/text side away
+ * object-fit: cover, anchored on the cube, so whatever cover trims is empty black
  * (see `.hero-frame` in globals.css).
  */
 export const FRAME_MEDIA_CLASS: Record<HeroOrientation, string> = {
-  // Wide: cube on the right → mirrored in RTL so it stays on the inline-end side, away from the copy.
+  // Wide: cube on the right → mirrored in RTL (the clean cut has no text) so it stays on the
+  // inline-end side, away from the copy.
   wide: 'object-[100%_50%] rtl:-scale-x-100',
   // Vertical: cube in the lower half.
   vertical: 'object-[50%_100%]',
@@ -15,8 +16,8 @@ export const FRAME_MEDIA_CLASS: Record<HeroOrientation, string> = {
 
 /**
  * The box the hero poster / loop video lives in (no hooks, renders on the server too).
- * Dark: vignetted so the video's own black melts into --bg. Light: a rounded dark "stage" card.
- * Sizing / cropping rules: `.hero-frame` in globals.css.
+ * Dark: edge-masked so the video's own black melts into --bg. Light: a rounded dark "stage" card.
+ * Sizing rules: `.hero-frame` in globals.css.
  */
 export function HeroFrame({
   poster,

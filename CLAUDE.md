@@ -60,9 +60,9 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Tiers (`src/lib/device.ts`): static (reduced motion / no WebGL2 → matching poster) · video (weak mobile or Save-Data,
   needs a CMS loop video) · low (32 cubes, no postfx, dpr ≤ 1.25) · high. `PerformanceMonitor` drops high→low once.
 - Loop videos: `hero.media.{wide,vertical}.{webm,mp4,poster}` (`lib/hero/media.ts`). Vertical when
-  `(max-width: 767px), (orientation: portrait)`. `HeroFrame` + `.hero-frame` CSS: the frame's aspect ratio crops the
-  logo/text out of the supplied loops (wide = inline-end square, vertical = bottom); dark = radial vignette, light =
-  rounded black stage card. Desktop loads the video at once; phones after idle + first interaction (LCP stays the copy).
+  `(max-width: 767px), (orientation: portrait)`. `HeroFrame` + `.hero-frame` CSS: the loops are clean (cube only), shown
+  full-frame with object-fit cover (wide = anchored to the inline-end side, mirrored in RTL; vertical = bottom);
+  dark = fills the stage with an edge mask, light = rounded black stage card (16:9 beside the copy on desktop). Desktop loads the video at once; phones after idle + first interaction (LCP stays the copy).
   **Dev only:** force with `?tier=high|low|video|static`.
 - All cube motion is in ONE `useFrame` (`three/PixelCubes.tsx`); layouts are precomputed in `three/layouts.ts`.
   Never add React state per frame. Scratch objects live in refs (React Compiler forbids mutating memo values).

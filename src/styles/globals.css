@@ -267,35 +267,29 @@ html.lenis body {
 /*
  * Hero poster / loop video frame (HeroFrame).
  *
- * The supplied loops carry the logo + "Small Pixels. BIG IMPACT." text (left third of the wide cut,
- * top 40% of the vertical cut). The frame's aspect ratio does the cropping, at every viewport:
- *  - wide: a square on the inline-end side, media anchored to the cube side → right ~56% only;
- *  - vertical: at least as wide as tall, anchored to the bottom → the lower half (the cube) only.
- * Dark: a radial vignette on the media melts the video's own black (~#030303) into --bg (#06030F),
- * so no rectangle edge shows (it mirrors with the media in RTL).
+ * The loops are clean (cube only, on black), so the frame shows the full cut with object-fit: cover:
+ *  - wide: cube on the right → anchored to the inline-end side (mirrored in RTL, see FRAME_MEDIA_CLASS);
+ *  - vertical: cube in the lower half → anchored to the bottom.
+ * Dark: the frame fills the stage; an edge mask melts the video's own black (~#030303) into --bg
+ * (#06030F), so no rectangle edge shows. The copy sits over the empty black side (+ .hero-scrim).
  * Light: the dark video sits in a rounded black "stage" card instead.
  */
 .hero-frame {
   position: absolute;
+  inset: 0;
   overflow: hidden;
 }
-.hero-frame-wide {
-  inset-block: 0;
-  inset-inline: auto 0;
-  aspect-ratio: 1;
-  max-width: 100%;
-}
-.hero-frame-vertical {
-  inset-inline: 0;
-  inset-block: auto 0;
-  aspect-ratio: 1;
-  max-height: 100%;
-}
 .hero-frame-media {
-  mask-image: radial-gradient(closest-side at 50% 52%, #000 50%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent, #000 7%, #000 93%, transparent),
+    linear-gradient(to bottom, transparent, #000 9%, #000 88%, transparent);
+  mask-composite: intersect;
 }
 
 .light .hero-frame {
+  /* Below the (transparent, overlaid) header. */
+  inset-block: 4.75rem 0.75rem;
+  inset-inline: clamp(1rem, 4vw, 2.5rem);
   border-radius: 28px;
   background: var(--brand-black);
   box-shadow:
@@ -305,26 +299,20 @@ html.lenis body {
 .light .hero-frame-media {
   mask-image: none;
 }
-.light .hero-frame-wide {
-  inset-block: 0.75rem;
-  inset-inline-end: clamp(1rem, 4vw, 2.5rem);
-}
-.light .hero-frame-vertical {
-  /* Below the (transparent, overlaid) header; still wider than tall → the text stays cropped. */
-  inset-block: 4.75rem 0.75rem;
-  inset-inline: clamp(1rem, 4vw, 2.5rem);
-  /* Size from the insets, not the ratio. */
-  aspect-ratio: auto;
-  max-height: none;
-}
 @media (min-width: 1024px) {
-  .hero-frame-wide {
-    inset-block: 5%;
-  }
+  /* Desktop light: a 16:9 card (the whole cut) on the inline-end side, vertically centred. */
   .light .hero-frame-wide {
-    inset-block: 20%;
-    inset-inline-end: 5%;
+    inset-block: 0;
+    inset-inline: auto 5%;
+    margin-block: auto;
+    width: min(40%, 42rem);
+    height: auto;
+    aspect-ratio: 16 / 9;
   }
+}
+/* The card sits beside the copy: no readability scrim washing over it. */
+.light [data-hero-stage]:has(.hero-frame) .hero-scrim {
+  display: none;
 }
 /* Media frame arriving over the placeholder. */
 .hero-frame-in {
