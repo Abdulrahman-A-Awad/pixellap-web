@@ -9,7 +9,6 @@ const isDev = process.env.NODE_ENV === 'development';
 // The API origin serves media (images, posters, videos) that the browser loads directly.
 // Production: API_URL=https://api.ppixelmedia.com/api/v1 → only api.ppixelmedia.com is allowed.
 const api = new URL(process.env.API_URL ?? 'http://localhost:8000/api/v1');
-const isLocalApi = /^(localhost|127\.0\.0\.1)$/.test(api.hostname);
 const siteIsHttps = (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://');
 
 /**
@@ -64,9 +63,11 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ['image/avif', 'image/webp'],
-    // Local development only: the API runs on localhost, which the optimizer blocks by default
-    // (SSRF protection). Stays false whenever API_URL points at a public host.
-    dangerouslyAllowLocalIP: isLocalApi,
+    // The optimizer refuses hosts that resolve to a private IP (SSRF protection). The API host does:
+    // localhost in development, and in production provision.sh maps api.ppixelmedia.com to 127.0.0.1
+    // (/etc/hosts) so server-side requests stay on the box — without this every content image is a 400.
+    // Safe because remotePatterns below allows ONLY the API's /storage/** — no other host or path.
+    dangerouslyAllowLocalIP: true,
     // Only the API's /storage (production: https://api.ppixelmedia.com/storage/**).
     remotePatterns: [
       {
