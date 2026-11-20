@@ -7,7 +7,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const isDev = process.env.NODE_ENV === 'development';
 
 // The API origin serves media (images, posters, videos) that the browser loads directly.
-// Production: API_URL=https://api.pixellap.com/api/v1 → only api.pixellap.com is allowed.
+// Production: API_URL=https://api.ppixelmedia.com/api/v1 → only api.ppixelmedia.com is allowed.
 const api = new URL(process.env.API_URL ?? 'http://localhost:8000/api/v1');
 const isLocalApi = /^(localhost|127\.0\.0\.1)$/.test(api.hostname);
 const siteIsHttps = (process.env.NEXT_PUBLIC_SITE_URL ?? '').startsWith('https://');
@@ -67,7 +67,7 @@ const nextConfig: NextConfig = {
     // Local development only: the API runs on localhost, which the optimizer blocks by default
     // (SSRF protection). Stays false whenever API_URL points at a public host.
     dangerouslyAllowLocalIP: isLocalApi,
-    // Only the API's /storage (production: https://api.pixellap.com/storage/**).
+    // Only the API's /storage (production: https://api.ppixelmedia.com/storage/**).
     remotePatterns: [
       {
         protocol: api.protocol === 'https:' ? 'https' : 'http',
