@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getSite } from '@/lib/api/endpoints';
 import type { Locale } from '@/lib/api/types';
 import { routing } from '@/i18n/routing';
+import { PRELAUNCH } from '@/lib/prelaunch';
 import { SITE_URL } from '@/lib/site-url';
 
 interface PageSeo {
@@ -39,6 +40,8 @@ export async function buildMetadata({ locale, path, title, description, image }:
     metadataBase: new URL(SITE_URL),
     title: { absolute: resolvedTitle },
     description: resolvedDescription,
+    // Pre-launch: every page (the [locale] layout uses this too) is noindex, nofollow.
+    ...(PRELAUNCH && { robots: { index: false, follow: false } }),
     alternates: {
       canonical: url,
       languages: {
