@@ -6,10 +6,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/brand/Logo';
 import { useSite } from '@/components/providers/SiteProvider';
 import { buttonClasses } from '@/components/ui/Button';
-import { Link, usePathname } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 import { LanguageSwitch } from './LanguageSwitch';
-import { NAV_ITEMS, isActive } from './nav';
+import { NavLinks } from './NavLinks';
 import { ThemeToggle } from './ThemeToggle';
 
 // Loaded on first use: keeps Motion out of the initial bundle.
@@ -21,7 +21,6 @@ const HIDE_AFTER = 120; // px — never hide near the top
 
 export function Header() {
   const { site, t } = useSite();
-  const pathname = usePathname();
   const [solid, setSolid] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -65,44 +64,21 @@ export function Header() {
           hidden && !menuOpen ? '-translate-y-full' : 'translate-y-0',
         )}
       >
-        <div className="container-page flex h-18 items-center gap-4 md:h-19">
+        <div className="header-in container-page flex h-(--header-h) items-center gap-4">
           <Link href="/" className="me-auto inline-flex items-center rounded-md" aria-label={siteName}>
-            <Logo variant="horizontal" height={40} alt={siteName} priority className="hidden md:inline-flex" />
-            <Logo variant="horizontal" height={32} alt={siteName} priority className="md:hidden" />
+            <Logo variant="horizontal" height={40} alt={siteName} priority className="hidden lg:inline-flex" />
+            <Logo variant="horizontal" height={32} alt={siteName} priority className="lg:hidden" />
           </Link>
 
           <nav aria-label={t('misc.main_navigation')} className="hidden lg:block">
-            <ul className="flex items-center gap-2">
-              {NAV_ITEMS.map((item) => {
-                const active = isActive(pathname, item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'relative inline-flex min-h-11 items-center rounded-pill px-4 text-[0.95rem] transition-colors',
-                        active ? 'text-text' : 'text-muted hover:text-text',
-                      )}
-                    >
-                      {t(item.label)}
-                      {active && (
-                        <span
-                          aria-hidden="true"
-                          className="absolute inset-x-4 bottom-1.5 h-0.5 rounded-pill bg-primary"
-                        />
-                      )}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <NavLinks />
           </nav>
 
-          <div className="flex items-center gap-1">
-            <LanguageSwitch />
+          {/* Phones/tablets: theme + menu only; language and the CTA live in the menu sheet. */}
+          <div className="flex items-center gap-1.5">
+            <LanguageSwitch className="hidden lg:inline-grid" />
             <ThemeToggle />
-            <Link href="/contact" className={buttonClasses('primary', 'ms-2 hidden md:inline-flex')}>
+            <Link href="/contact" className={buttonClasses('primary', 'ms-1.5 hidden lg:inline-flex')}>
               {t('actions.start_project')}
               <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
             </Link>

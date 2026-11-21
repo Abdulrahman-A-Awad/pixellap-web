@@ -166,6 +166,9 @@ export function SceneGate({ media, progress, pointer, className }: SceneGateProp
 
       {isScene && colors && (desktop ? hydrated : idle) && (
         <div className={cn('absolute inset-0 opacity-0 transition-opacity duration-500', ready && 'opacity-100')}>
+          {/* Light theme: soft white → pearl backdrop with a lavender glow behind the cluster
+              (the canvas is transparent there; globals.css .hero-light-backdrop). */}
+          {colors.theme === 'light' && <div aria-hidden="true" className="hero-light-backdrop absolute inset-0" />}
           <PixelScene
             tier={tier}
             theme={colors.theme}

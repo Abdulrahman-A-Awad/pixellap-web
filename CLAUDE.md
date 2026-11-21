@@ -67,6 +67,9 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   **Dev only:** force with `?tier=high|low|video|static`.
 - All cube motion is in ONE `useFrame` (`three/PixelCubes.tsx`); layouts are precomputed in `three/layouts.ts`.
   Never add React state per frame. Scratch objects live in refs (React Compiler forbids mutating memo values).
+- Light theme: the canvas is transparent (`alpha: true`, no scene background) over `.hero-light-backdrop` (white → pearl +
+  lavender glow behind the cluster, rendered by SceneGate); fainter grid with a shorter fade; grounding shadow =
+  drei `ContactShadows` on high, `three/ShadowBlob` (one quad) on low. Dark is unchanged.
 - Reflections come from `three/StudioEnvironment.tsx` (lightformer panels → PMREM). Do not use drei
   `<Environment>`: it bundles HDR/EXR loaders. No network assets in the scene.
 - Desktop (motion allowed): the scene chunk is `import()`ed when `SceneGate` evaluates (parallel to hydration) and the
@@ -86,10 +89,32 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - **PixelField:** corner-only (`corner`, 6–10 squares), lives in the page gutter outside the content column, renders
   ≥ 1400px only, opacity capped by `--pixel-opacity` (0.35 dark / 0.2 light). Never in heroes or the header.
 - Images on cards are never under a scrim: text goes on a solid card panel (bento, rail, stacking cards).
-- Logo: `variant="horizontal"` in header (40px / 32px mobile) and footer; generated from the stacked logo's paths
+- Logo: `variant="horizontal"` in header (40px desktop / 32px below lg) and footer; generated from the stacked logo's paths
   (`public/brand/pixellap-logo-h*.svg`).
+- Header height = `--header-h` (64px, 76px from lg): use `h-(--header-h)` / `pt-(--header-h)` / `calc(var(--header-h) …)`,
+  never a fixed number. Desktop nav = `layout/NavLinks` (active pill measured + slid, hover underline `.nav-link` from the
+  reading start). `LanguageSwitch` = segmented "EN | ع" pill (dir=ltr, thumb slides on click); `ThemeToggle` = one SVG
+  sun↔moon morph (`.theme-icon-*`). Below lg the header is logo + theme + menu; language, CTA and WhatsApp live in
+  `MobileMenu`. The footer has no language/theme toggles.
+- WhatsApp: `layout/WhatsAppButton` = floating chat widget (tooltip after 4 s once per session, chat card → wa.me with
+  `whatsapp.prefill` + page title; Esc/outside click; lifts above `[data-footer-bar]` through `--wa-lift`). CSS only,
+  no Motion. Hidden without a real number (`whatsappDigits`).
+- Brand icons: `brand/BrandIcons` (Simple Icons paths, CC0; lucide has none). Footer socials render only networks with a
+  URL, in `SOCIAL_ORDER`; hover tint per network in `.social-btn[data-network]`. Pixel glyphs: `brand/PixelIcon`.
+- Cover images: `imageSource(asset)` (original file → optimizer) + `coverSizes(asset, rules)` for every `fill` +
+  `object-cover` image whose box is taller than the photo — otherwise the browser gets a box-width file that is upscaled
+  (soft / pixelated).
+- Stacking cards: sticky/height in `.stack-card` (top = header + 24px + i × 14px; height fits the viewport minus the
+  stack so the last card's button is always visible); GSAP only scales the previous card to 0.95 and
+  scrubs `--stack-dim` (brightness −15% dark / −7% light, in CSS).
+  Card photos load eagerly with the `thumb` conversion as background placeholder.
+- Process: `ProcessLine` measures the `[data-marker]` centres and positions the track/line (horizontal or vertical);
+  progress (one row) runs from section top at 75% of the viewport to section centre at 50%; vertical timeline: the
+  line tip follows 60% of the viewport.
+- Brand name in CMS copy: `withSiteName(text, site.settings.site_name)` (`lib/site/brand.ts`) swaps the Latin "Pixellap"
+  for the localized site name once the API serves one (About eyebrow/title).
 - Home renders `/home` sections in API order (`app/[locale]/page.tsx` → `renderSection`). The stats render inside the
-  About section (`AboutTeaser`); the standalone `StatsSection` only shows on home when About is hidden (and on /about).
+  About section (`AboutTeaser`: a full-width strip of 4 tiles under the image | text columns); the standalone `StatsSection` only shows on home when About is hidden (and on /about).
   Sections live in `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `PageHero`, `ui/CtaLink`.
 - **Reveal on scroll:** add `data-reveal` (stagger with `style={{'--reveal-i': n}}`). Pure CSS scroll-driven animation
   (`animation-timeline: view()`, in `@supports` + no-preference motion): no JS, never touches server HTML; on-screen

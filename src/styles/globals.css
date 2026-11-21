@@ -366,6 +366,32 @@ html.lenis body {
 }
 
 /*
+ * Light theme behind the (transparent) 3D canvas: white → pearl towards the floor, with a lavender
+ * glow where the cube cluster sits (inline-end on desktop, centre-bottom on phones).
+ */
+.hero-light-backdrop {
+  --glow-x: 50%;
+  --glow-y: 62%;
+  background:
+    radial-gradient(
+      ellipse 34% 40% at var(--glow-x) var(--glow-y),
+      color-mix(in oklab, var(--brand-lavender) 30%, transparent),
+      color-mix(in oklab, var(--brand-lavender) 10%, transparent) 55%,
+      transparent 75%
+    ),
+    linear-gradient(to bottom, var(--bg) 0%, var(--bg) 30%, var(--brand-pearl) 100%);
+}
+@media (min-width: 1024px) {
+  .hero-light-backdrop {
+    --glow-x: 72%;
+    --glow-y: 50%;
+  }
+  [dir='rtl'] .hero-light-backdrop {
+    --glow-x: 28%;
+  }
+}
+
+/*
  * Hero poster / loop video frame (HeroFrame).
  *
  * The loops are clean (cube only, on black), so the frame shows the full cut with object-fit: cover:
@@ -579,74 +605,328 @@ html.lenis body {
   }
 }
 
-/* ───────────────────────────── Process line ───────────────────────────── */
+/* ───────────────────────────── Process ───────────────────────────── */
 
 /*
- * Each step = a 14px node + a card. Phones: vertical timeline, nodes in a 14px column on the
- * inline-start side (line through their centres). Desktop: one row of cards, nodes above them,
- * horizontal line from the first node to the last.
+ * Each step = an 18px marker + a card. Phones: vertical timeline (markers in an 18px column on the
+ * inline-start side); desktop: one row of cards with the markers above them. The track/line geometry
+ * is measured from the markers by ProcessLine (inline px), so it always passes through their centres.
  */
 .process-dot {
   position: relative;
   z-index: 1;
   display: block;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
   border: 2px solid var(--border);
   background: var(--bg);
   transition:
-    background-color 0.5s,
-    border-color 0.5s,
-    box-shadow 0.5s;
+    background-color 0.4s,
+    border-color 0.4s,
+    box-shadow 0.4s,
+    transform 0.4s var(--ease-out-expo);
 }
 .process-track,
 .process-line {
   position: absolute;
-  /* Mobile: vertical through the node centres (nodes sit 28px below each card top). */
-  inset-block: 35px 24px;
-  inset-inline-start: 6px;
-  width: 2px;
   border-radius: 2px;
+  pointer-events: none;
+  opacity: 0;
+}
+[data-measured] > .process-track,
+[data-measured] > .process-line {
+  opacity: 1;
 }
 .process-track {
   background: var(--border);
 }
 .process-line {
   background: linear-gradient(var(--brand-lavender), var(--brand-iris));
-  transform: scaleY(var(--line, 0));
-  transform-origin: top;
+  transform: scale(0);
   box-shadow: 0 0 12px var(--accent-glow);
+  transition: transform 120ms linear;
+}
+.process-line[data-axis='x'] {
+  background: linear-gradient(to right, var(--brand-lavender), var(--brand-iris));
 }
 @media (min-width: 1024px) {
   .process-steps {
     grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
   }
-  .process-track,
-  .process-line {
-    /* Desktop: horizontal, first node centre → last node centre. */
-    inset-block: 6px auto;
-    inset-inline-start: 7px;
-    inset-inline-end: calc((100% - (var(--cols, 4) - 1) * 1.25rem) / var(--cols, 4) - 7px);
-    width: auto;
-    height: 2px;
-  }
-  .process-line {
-    background: linear-gradient(to right, var(--brand-lavender), var(--brand-iris));
-    transform: scaleX(var(--line, 0));
-    transform-origin: left center;
-  }
-  [dir='rtl'] .process-line {
-    background: linear-gradient(to left, var(--brand-lavender), var(--brand-iris));
-    transform-origin: right center;
-  }
+}
+
+/* Card: hover lift + gradient border (masked pseudo-element); highlighted once the line reaches it. */
+.process-card {
+  position: relative;
+  transition:
+    transform 0.35s var(--ease-out-expo),
+    box-shadow 0.35s ease,
+    border-color 0.4s;
+}
+.process-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--brand-lavender), var(--brand-iris) 45%, transparent 80%);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.process-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 44px -28px color-mix(in oklab, var(--accent-glow) 70%, transparent);
+}
+.process-card:hover::before,
+.process-step[data-active] .process-card::before {
+  opacity: 1;
+}
+.process-icon {
+  background: color-mix(in oklab, var(--primary) 9%, transparent);
+  transition: background-color 0.4s;
+}
+.process-step[data-active] .process-icon {
+  background: color-mix(in oklab, var(--primary) 16%, transparent);
+}
+.process-num {
+  transition: color 0.4s;
+}
+.process-step[data-active] .process-num {
+  color: var(--link);
 }
 .process-step[data-active] .process-dot {
   background: var(--primary);
   border-color: var(--primary);
-  box-shadow: 0 0 18px -2px var(--accent-glow);
+  box-shadow:
+    0 0 0 5px color-mix(in oklab, var(--primary) 18%, transparent),
+    0 0 18px -2px var(--accent-glow);
+  transform: rotate(45deg);
 }
-.process-step[data-active] > div {
+
+/* ───────────────────────────── Header ───────────────────────────── */
+
+/* Header height (sticky offsets etc. read it): 64px phones/tablets, 76px desktop. */
+:root {
+  --header-h: 4rem;
+}
+@media (min-width: 1024px) {
+  :root {
+    --header-h: 4.75rem;
+  }
+}
+
+/* First paint: the bar content fades/slides in once (the <header> itself keeps hide/show transforms). */
+.header-in {
+  animation: header-in 0.6s var(--ease-out-expo) both;
+}
+@keyframes header-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Desktop nav: the active pill (slides between items, NavLinks) + a hover underline from the reading start. */
+.nav-indicator {
+  background: color-mix(in oklab, var(--primary) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 22%, transparent);
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 1rem;
+  bottom: 0.5rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 220ms var(--ease-out-expo);
+}
+[dir='rtl'] .nav-link::after {
+  transform-origin: right center;
+}
+.nav-link:not([aria-current]):hover::after,
+.nav-link:not([aria-current]):focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Theme toggle: sun (dark theme) ↔ moon (light theme), one svg. */
+.theme-icon-core,
+.theme-icon-rays {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.theme-icon-core {
+  transform: scale(0.5);
+  transition: transform 420ms var(--ease-out-expo);
+}
+.theme-icon-cut {
+  transform: translate(14px, -14px);
+  transition: transform 420ms var(--ease-out-expo);
+}
+.theme-icon-rays {
+  transition:
+    transform 420ms var(--ease-out-expo),
+    opacity 250ms ease;
+}
+.light .theme-icon-core {
+  transform: scale(1);
+}
+.light .theme-icon-cut {
+  transform: translate(5px, -4px);
+}
+.light .theme-icon-rays {
+  opacity: 0;
+  transform: rotate(-60deg) scale(0.4);
+}
+
+/* ───────────────────────────── Footer socials ───────────────────────────── */
+
+/* Icon buttons: lift + a glow tinted with the network's brand colour on hover / keyboard focus. */
+.social-btn {
+  --net: var(--primary);
+  transition:
+    transform 220ms var(--ease-out-expo),
+    color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+.social-btn[data-network='facebook'] {
+  --net: #0866ff;
+}
+.social-btn[data-network='instagram'] {
+  --net: #ff0069;
+}
+.social-btn[data-network='linkedin'] {
+  --net: #0a66c2;
+}
+.social-btn[data-network='tiktok'] {
+  --net: #fe2c55;
+}
+.social-btn[data-network='youtube'] {
+  --net: #ff0000;
+}
+.social-btn[data-network='x'] {
+  --net: var(--text);
+}
+.social-btn[data-network='behance'] {
+  --net: #1769ff;
+}
+.social-btn[data-network='snapchat'] {
+  --net: #f7d900;
+}
+.social-btn:hover,
+.social-btn:focus-visible {
+  transform: translateY(-3px);
+  color: var(--text);
+  border-color: color-mix(in oklab, var(--net) 60%, transparent);
+  box-shadow: 0 10px 24px -10px color-mix(in oklab, var(--net) 70%, transparent);
+}
+
+/* ───────────────────────────── WhatsApp widget ───────────────────────────── */
+
+.wa-card {
+  transform-origin: bottom right;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) scale(0.96);
+  transition:
+    opacity 200ms ease,
+    transform 260ms var(--ease-out-expo),
+    visibility 0s linear 260ms;
+}
+[dir='rtl'] .wa-card {
+  transform-origin: bottom left;
+}
+.wa-card[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 200ms ease,
+    transform 260ms var(--ease-out-expo),
+    visibility 0s;
+}
+/* Chat area: faint pixel dots, like a messenger wallpaper. */
+.wa-chat-bg {
+  background-color: var(--surface-2);
+  background-image: radial-gradient(color-mix(in oklab, var(--primary) 14%, transparent) 1px, transparent 1.5px);
+  background-size: 14px 14px;
+}
+.wa-pulse {
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--whatsapp) 55%, transparent);
+  animation: wa-pulse 2.4s ease-out infinite;
+}
+@keyframes wa-pulse {
+  70%,
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+.wa-tooltip {
+  animation: wa-tooltip-in 0.45s var(--ease-out-expo) both;
+}
+@keyframes wa-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wa-pulse {
+    animation: none;
+  }
+}
+
+/* ───────────────────────────── Stacking cards (home services) ───────────────────────────── */
+
+/*
+ * Desktop: each card sticks at header + 24px + index × 14px (a neat, aligned sliver of every previous
+ * card shows) and is short enough that the whole card — button included — fits under the most offset
+ * one: min(100svh − header − 64px − (n − 1) × 14px, 560px). --i / --n are set inline by ServiceCard.
+ */
+@media (min-width: 1024px) {
+  .stack-card {
+    position: sticky;
+    top: calc(var(--header-h) + 24px + var(--i, 0) * 14px);
+    height: min(calc(100svh - var(--header-h) - 64px - (var(--n, 1) - 1) * 14px), 560px);
+  }
+}
+/* Previous card dims as the next one covers it (--stack-dim 0 → 1, scrubbed by GSAP): mild, per theme. */
+[data-stack-inner] {
+  filter: brightness(calc(1 - var(--stack-dim, 0) * 0.15));
+}
+.light [data-stack-inner] {
+  filter: brightness(calc(1 - var(--stack-dim, 0) * 0.07));
+}
+
+/* ───────────────────────────── About stats strip ───────────────────────────── */
+
+/* Big numeral filled lavender → iris (background-clip covers the CSS counter text too). */
+.stat-number {
+  background: linear-gradient(135deg, var(--brand-lavender), var(--brand-iris));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.light .stat-number {
+  background-image: linear-gradient(135deg, var(--brand-iris), var(--brand-royal));
+}
+.stat-affix {
+  color: var(--primary);
+  font-weight: 400;
+}
+.stat-tile {
+  transition: border-color 0.35s ease;
+}
+.stat-tile:hover {
   border-color: color-mix(in oklab, var(--brand-lavender) 45%, transparent);
 }
 

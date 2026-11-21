@@ -4,7 +4,8 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useIdleAfterLoad } from '@/lib/hooks/useExternal';
 
 /**
- * Desktop stacking effect: as the next card arrives, the previous one scales to ~0.94 and dims.
+ * Desktop stacking effect: as the next card arrives, the previous one scales to 0.95 and dims by at
+ * most 15% in dark / 7% in light (a CSS var, so a white card never turns grey). Sticky offsets / heights: globals.css .stack-card.
  * GSAP ScrollTrigger (scrub) is loaded after idle; mobile / reduced motion get a plain list.
  */
 export function StackingCards({ children }: { children: ReactNode }) {
@@ -30,8 +31,8 @@ export function StackingCards({ children }: { children: ReactNode }) {
           const stickyTop = (el: HTMLElement) => parseFloat(getComputedStyle(el).top) || 0;
           // From the moment the next card starts to overlap this (stuck) card until it is stuck itself.
           gsap.to(inner, {
-            scale: 0.94,
-            filter: 'brightness(0.62)',
+            scale: 0.95,
+            '--stack-dim': 1, // brightness per theme: globals.css [data-stack-inner]
             ease: 'none',
             transformOrigin: '50% 0%',
             scrollTrigger: {

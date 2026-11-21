@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { cn } from '@/lib/cn';
 import { observe } from '@/lib/hooks/useInView';
 
 /**
@@ -10,7 +11,7 @@ import { observe } from '@/lib/hooks/useInView';
  * - first observation: already on screen (or above it) → stays as is, the final value;
  * - below the fold → "pending" (counter at 0) → "run" when it scrolls in.
  */
-export function StatCount({ value }: { value: number }) {
+export function StatCount({ value, className = 'font-display-thin' }: { value: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [state, setState] = useState<'pending' | 'run' | undefined>(undefined);
 
@@ -45,8 +46,8 @@ export function StatCount({ value }: { value: number }) {
     <span
       ref={ref}
       data-count={state}
-      // Thin brand face for the big figure; fixed width so the count-up does not jitter.
-      className="stat-count digits-fixed font-display-thin"
+      // Fixed width so the count-up does not jitter. Face: thin by default (StatsSection), bold in About.
+      className={cn('stat-count digits-fixed', className)}
       style={{ '--to': value, '--len': String(value).length } as CSSProperties}
     >
       <span className="stat-final">{value.toLocaleString('en-US')}</span>

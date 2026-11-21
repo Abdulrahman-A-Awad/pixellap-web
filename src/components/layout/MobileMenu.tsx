@@ -4,11 +4,13 @@ import { ArrowRight, X } from 'lucide-react';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { useEffect, useRef } from 'react';
 import { Logo } from '@/components/brand/Logo';
+import { BrandIcon } from '@/components/brand/BrandIcons';
 import { useSite } from '@/components/providers/SiteProvider';
 import { buttonClasses } from '@/components/ui/Button';
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 import { lockScroll } from '@/lib/motion/lenis';
+import { whatsappUrl } from '@/lib/site/settings';
 import { LanguageSwitch } from './LanguageSwitch';
 import { NAV_ITEMS, isActive } from './nav';
 import { ThemeToggle } from './ThemeToggle';
@@ -19,12 +21,17 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Full-screen menu: pixel-grid reveal, staggered links, focus trap, Esc closes, scroll locked. */
+/**
+ * Full-screen menu sheet (≤ 1023px): pixel-grid reveal, large staggered links, then the CTA +
+ * WhatsApp buttons and the language pill + theme toggle at the bottom. Focus trap, Esc / close
+ * button, body scroll locked.
+ */
 export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { site, t } = useSite();
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
+  const whatsapp = whatsappUrl(site.settings);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -81,6 +88,14 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.25, delay: 0.15 } }}
           >
+            {/* Solid sheet under the grid once it has filled in (hides sub-pixel seams between cells). */}
+            <motion.div
+              aria-hidden="true"
+              className="absolute inset-0 bg-surface"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { duration: 0.2, delay: 0.45 } }}
+              exit={{ opacity: 0, transition: { duration: 0.05 } }}
+            />
             {/* Pixel-grid reveal */}
             <div
               aria-hidden="true"
@@ -107,7 +122,7 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
             </div>
 
             <div className="relative flex min-h-full flex-col">
-              <div className="container-page flex h-18 items-center justify-between md:h-19">
+              <div className="container-page flex h-(--header-h) items-center justify-between">
                 <Logo variant="horizontal" height={32} alt={site.settings.site_name} />
                 <button
                   type="button"
@@ -136,10 +151,17 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
                           onClick={onClose}
                           aria-current={active ? 'page' : undefined}
                           className={cn(
-                            'block py-2 text-heading transition-colors',
+                            'flex items-center gap-4 py-2.5 text-[clamp(2rem,8vw,2.75rem)] leading-tight font-bold transition-colors',
                             active ? 'text-link' : 'text-text hover:text-link',
                           )}
                         >
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              'size-2.5 rounded-[3px] transition-colors',
+                              active ? 'bg-primary' : 'bg-border',
+                            )}
+                          />
                           {t(item.label)}
                         </Link>
                       </motion.li>
@@ -149,18 +171,33 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
               </nav>
 
               <motion.div
-                className="container-page flex flex-wrap items-center gap-2 pb-10"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                className="container-page flex flex-col gap-6 pb-10"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                transition={{ duration: 0.4, delay: 0.55 }}
+                transition={{ duration: 0.45, ease: EASE, delay: 0.25 + NAV_ITEMS.length * 0.07 }}
               >
-                <Link href="/contact" onClick={onClose} className={buttonClasses('primary', 'w-full sm:w-auto')}>
-                  {t('actions.start_project')}
-                  <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
-                </Link>
-                <LanguageSwitch onNavigate={onClose} />
-                <ThemeToggle />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Link href="/contact" onClick={onClose} className={buttonClasses('primary', 'w-full')}>
+                    {t('actions.start_project')}
+                    <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
+                  </Link>
+                  {whatsapp && (
+                    <a
+                      href={whatsapp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={buttonClasses('outline', 'w-full')}
+                    >
+                      <BrandIcon name="whatsapp" className="size-4.5 text-whatsapp" />
+                      {t('contact.whatsapp')}
+                    </a>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-4 border-t border-border pt-6">
+                  <LanguageSwitch onNavigate={onClose} />
+                  <ThemeToggle className="border border-border" />
+                </div>
               </motion.div>
             </div>
           </motion.div>

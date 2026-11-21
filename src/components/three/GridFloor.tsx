@@ -8,6 +8,8 @@ interface GridFloorProps {
   dotColor: string;
   /** Overall strength (lower in light mode). */
   opacity: number;
+  /** Distance (world units) at which the grid has faded out — shorter reads as fog. */
+  fade?: number;
   y?: number;
 }
 
@@ -51,7 +53,7 @@ const fragmentShader = /* glsl */ `
 `;
 
 /** Brand-style grid floor (custom shader, no textures). */
-export function GridFloor({ lineColor, dotColor, opacity, y = -5.6 }: GridFloorProps) {
+export function GridFloor({ lineColor, dotColor, opacity, fade = 34, y = -5.6 }: GridFloorProps) {
   const material = useRef<THREE.ShaderMaterial>(null);
 
   // Initial uniforms only; theme changes update them in place through the ref (no recompile).
@@ -60,7 +62,7 @@ export function GridFloor({ lineColor, dotColor, opacity, y = -5.6 }: GridFloorP
     uDot: { value: new THREE.Color(dotColor) },
     uOpacity: { value: opacity },
     uCell: { value: 1.6 },
-    uFade: { value: 34 },
+    uFade: { value: fade },
   }));
 
   useEffect(() => {
@@ -69,7 +71,8 @@ export function GridFloor({ lineColor, dotColor, opacity, y = -5.6 }: GridFloorP
     u.uLine.value.set(lineColor);
     u.uDot.value.set(dotColor);
     u.uOpacity.value = opacity;
-  }, [lineColor, dotColor, opacity]);
+    u.uFade.value = fade;
+  }, [lineColor, dotColor, opacity, fade]);
 
   return (
     <mesh rotation-x={-Math.PI / 2} position-y={y} renderOrder={-1}>

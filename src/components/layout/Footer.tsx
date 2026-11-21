@@ -1,24 +1,25 @@
-import { Clock, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
-import { Suspense, type ReactNode } from 'react';
+import { Clock, Mail, MapPin, Phone } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { BRAND_ICONS, BrandIcon, isBrandIcon, type BrandIconName } from '@/components/brand/BrandIcons';
 import { Logo } from '@/components/brand/Logo';
 import { Link } from '@/i18n/navigation';
 import type { Site } from '@/lib/api/types';
-import { settingValue, socialLinks, whatsappUrl } from '@/lib/site/settings';
+import { settingValue, socialLinks } from '@/lib/site/settings';
 import type { Translate } from '@/lib/site/translate';
 import { CurrentYear } from './CurrentYear';
-import { LanguageSwitch } from './LanguageSwitch';
 import { NAV_ITEMS } from './nav';
-import { ThemeToggle } from './ThemeToggle';
 
-/** Network names are proper nouns (not translated copy). */
-const NETWORKS: Record<string, string> = {
-  instagram: 'Instagram',
-  linkedin: 'LinkedIn',
-  tiktok: 'TikTok',
-  youtube: 'YouTube',
-  x: 'X',
-  behance: 'Behance',
-};
+/** Display order of the social icon buttons (only networks with a URL render). */
+const SOCIAL_ORDER: BrandIconName[] = [
+  'facebook',
+  'instagram',
+  'linkedin',
+  'tiktok',
+  'youtube',
+  'x',
+  'behance',
+  'snapchat',
+];
 
 function Heading({ children }: { children: ReactNode }) {
   return <h2 className="mb-5 text-meta font-bold text-text">{children}</h2>;
@@ -30,11 +31,13 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
   const { settings } = site;
   const email = settingValue(settings.email);
   const phone = settingValue(settings.phone);
-  const whatsapp = whatsappUrl(settings);
   const address = settingValue(settings.address);
   const hours = settingValue(settings.working_hours);
   const vat = settingValue(settings.vat_number);
-  const socials = socialLinks(settings);
+  // Unknown keys are skipped (no icon); the rest follow SOCIAL_ORDER.
+  const socials = socialLinks(settings)
+    .filter((s): s is { network: BrandIconName; url: string } => isBrandIcon(s.network) && s.network !== 'whatsapp')
+    .sort((a, b) => SOCIAL_ORDER.indexOf(a.network) - SOCIAL_ORDER.indexOf(b.network));
 
   return (
     <footer className="border-t border-border bg-surface">
@@ -47,16 +50,19 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
           {socials.length > 0 && (
             <div>
               <h2 className="sr-only">{t('footer.follow_us')}</h2>
-              <ul className="flex flex-wrap gap-2">
+              <ul className="flex flex-wrap gap-2.5">
                 {socials.map(({ network, url }) => (
                   <li key={network}>
                     <a
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-9 items-center rounded-pill border border-border px-3 text-xs text-muted transition-colors hover:border-primary hover:text-text"
+                      aria-label={BRAND_ICONS[network].name}
+                      title={BRAND_ICONS[network].name}
+                      data-network={network}
+                      className="social-btn inline-flex size-11 items-center justify-center rounded-pill border border-border bg-bg text-muted"
                     >
-                      {NETWORKS[network] ?? network}
+                      <BrandIcon name={network} className="size-[18px]" />
                     </a>
                   </li>
                 ))}
@@ -110,14 +116,6 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
                 </a>
               </li>
             )}
-            {whatsapp && (
-              <li className="flex items-start gap-3">
-                <MessageCircle aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" />
-                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={linkClass}>
-                  {t('contact.whatsapp')}
-                </a>
-              </li>
-            )}
             {address && (
               <li className="flex items-start gap-3">
                 <MapPin aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" />
@@ -137,8 +135,9 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
         </div>
       </div>
 
-      <div className="border-t border-border">
-        <div className="container-page flex flex-col gap-3 py-5 text-meta text-muted sm:flex-row sm:items-center sm:justify-between">
+      {/* data-footer-bar: the floating WhatsApp widget lifts above this bar when it is on screen. */}
+      <div data-footer-bar className="border-t border-border">
+        <div className="container-page py-5 text-meta text-muted">
           <div className="flex flex-col gap-1 sm:flex-row sm:gap-6">
             <p>
               © <CurrentYear /> {settings.site_name}. {t('footer.rights')}
@@ -148,13 +147,6 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
                 {t('footer.vat')} <span dir="ltr">{vat}</span>
               </p>
             )}
-          </div>
-          <div className="-ms-3 flex items-center gap-1 sm:ms-0 sm:-me-3">
-            {/* LanguageSwitch reads usePathname(): request-time on routes with unknown params. */}
-            <Suspense fallback={null}>
-              <LanguageSwitch />
-            </Suspense>
-            <ThemeToggle />
           </div>
         </div>
       </div>

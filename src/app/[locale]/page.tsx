@@ -67,7 +67,7 @@ function renderSection(section: HomeSection, site: Site, t: Translate, stats: St
     case 'clients':
       return <ClientsSection section={section} />;
     case 'about':
-      return <AboutTeaser section={section} stats={stats} />;
+      return <AboutTeaser section={section} stats={stats} siteName={site.settings.site_name} />;
     case 'faq':
       return (
         <FaqSection
@@ -122,7 +122,7 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
           <div
             key={section.key}
             data-section={section.key}
-            className={cn(surface && 'tone-surface', i === 0 && section.key !== 'hero' && 'pt-19')}
+            className={cn(surface && 'tone-surface', i === 0 && section.key !== 'hero' && 'pt-(--header-h)')}
           >
             {renderSection(section, site, t, stats)}
           </div>

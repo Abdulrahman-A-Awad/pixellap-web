@@ -39,7 +39,7 @@ export function Hero({ hero, settings, t }: HeroProps) {
       />
 
       {/* Desktop: vertically centred in the space below the fixed header. */}
-      <div data-hero-copy className="relative lg:absolute lg:inset-0 lg:flex lg:items-center lg:pt-19">
+      <div data-hero-copy className="relative lg:absolute lg:inset-0 lg:flex lg:items-center lg:pt-(--header-h)">
         <div className="container-page">
           {/* Desktop: capped so the copy stays in the start half, clear of the cube (.hero-frame-wide). */}
           <div className="max-w-2xl pt-6 pb-14 lg:max-w-[min(46vw,620px)] lg:py-0">
