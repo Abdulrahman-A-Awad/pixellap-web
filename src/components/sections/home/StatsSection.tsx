@@ -23,12 +23,8 @@ export function StatsSection({
   const headingId = `${id}-title`;
 
   return (
-    <section
-      id={id}
-      aria-labelledby={title ? headingId : undefined}
-      className="relative isolate overflow-clip py-20 md:py-28"
-    >
-      <PixelField seed={21} rows={8} density={0.035} className="opacity-50" />
+    <section id={id} aria-labelledby={title ? headingId : undefined} className="relative isolate section-y">
+      <PixelField seed={21} corner="top-end" count={7} />
       <div className="container-page flex flex-col gap-12">
         <SectionHeading eyebrow={eyebrow} title={title} subtitle={subtitle} id={headingId} />
 
@@ -52,14 +48,14 @@ export function StatsSection({
                 i > 0 && 'lg:border-s',
               )}
             >
-              <dt className="text-sm text-muted md:text-base">{stat.label}</dt>
-              <dd className="text-[clamp(2.75rem,5.5vw,5rem)] leading-none">
+              <dt className="text-meta text-muted">{stat.label}</dt>
+              <dd className="text-[clamp(2.5rem,4vw,3.5rem)] leading-none">
                 {/* Numbers stay LTR inside RTL text. */}
                 <bdi dir="ltr" className="inline-flex items-baseline gap-0.5">
-                  {stat.prefix && <span className="font-bold text-primary">{stat.prefix}</span>}
+                  {stat.prefix && <span className="font-display-thin text-link">{stat.prefix}</span>}
                   {/* CSS count-up (globals.css .stat-count): the real number stays in the DOM. */}
                   <StatCount value={stat.value} />
-                  {stat.suffix && <span className="font-bold text-primary">{stat.suffix}</span>}
+                  {stat.suffix && <span className="font-display-thin text-link">{stat.suffix}</span>}
                 </bdi>
               </dd>
             </div>

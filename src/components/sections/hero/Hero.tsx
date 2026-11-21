@@ -1,7 +1,9 @@
 import { ArrowRight, Play } from 'lucide-react';
 import { buttonClasses } from '@/components/ui/Button';
 import { CtaLink } from '@/components/ui/CtaLink';
-import type { HeroSection, HomeStat, SiteSettings } from '@/lib/api/types';
+import { Link } from '@/i18n/navigation';
+import { cn } from '@/lib/cn';
+import type { HeroSection, SiteSettings } from '@/lib/api/types';
 import { settingValue } from '@/lib/site/settings';
 import type { Translate } from '@/lib/site/translate';
 import { HeroStage } from './HeroStage';
@@ -11,16 +13,19 @@ import { WordReveal } from './WordReveal';
 
 interface HeroProps {
   hero: HeroSection;
-  stats: HomeStat[];
   settings: SiteSettings;
   t: Translate;
 }
 
+const secondaryClass = buttonClasses('ghost', 'border border-border px-5 backdrop-blur-sm hover:border-primary');
+
 /**
- * Home hero. All copy is server-rendered (readable without JS — this is the LCP);
- * the 3D scene / video / poster is decided on the client by SceneGate.
+ * Home hero: H1 + CMS subtitle + two CTAs (primary "Start a project", secondary "Watch the reel"
+ * when a showreel exists, otherwise "Explore our services"). All copy is server-rendered
+ * (readable without JS — this is the LCP); the 3D scene / video / poster is decided on the
+ * client by SceneGate. No eyebrow and no stat chips: the hero stays calm.
  */
-export function Hero({ hero, stats, settings, t }: HeroProps) {
+export function Hero({ hero, settings, t }: HeroProps) {
   const showreel = settingValue(settings.showreel_url);
   const title = hero.title ?? settings.tagline;
 
@@ -33,55 +38,37 @@ export function Hero({ hero, stats, settings, t }: HeroProps) {
         className="pointer-events-none absolute inset-x-0 top-[calc(max(42svh,16rem)-6rem)] h-24 bg-linear-to-b from-transparent to-bg lg:hidden light:hidden"
       />
 
-      <div data-hero-copy className="relative lg:absolute lg:inset-0 lg:flex lg:items-center">
+      {/* Desktop: vertically centred in the space below the fixed header. */}
+      <div data-hero-copy className="relative lg:absolute lg:inset-0 lg:flex lg:items-center lg:pt-19">
         <div className="container-page">
           {/* Desktop: capped so the copy stays in the start half, clear of the cube (.hero-frame-wide). */}
-          <div className="max-w-2xl py-10 lg:max-w-[min(46vw,620px)] lg:py-0">
-            {hero.eyebrow && (
-              <p className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-link">
-                <span aria-hidden="true" className="size-2 rounded-[2px] bg-primary" />
-                {hero.eyebrow}
-              </p>
-            )}
+          <div className="max-w-2xl pt-6 pb-14 lg:max-w-[min(46vw,620px)] lg:py-0">
+            <WordReveal id={HERO_TITLE_ID} text={title} className="text-display text-balance" />
 
-            <WordReveal id={HERO_TITLE_ID} text={title} className="text-display" />
+            {hero.subtitle && <p className="mt-6 max-w-[34rem] text-lead text-pretty text-muted">{hero.subtitle}</p>}
 
-            {hero.subtitle && <p className="mt-6 max-w-xl text-lg text-muted md:text-xl">{hero.subtitle}</p>}
+            <div className="mt-10 flex flex-wrap items-center gap-3">
+              <CtaLink
+                cta={hero.cta ?? { label: t('actions.start_project'), url: '/contact' }}
+                className={buttonClasses('primary', 'px-6')}
+              >
+                {hero.cta?.label ?? t('actions.start_project')}
+                <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
+              </CtaLink>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              {hero.cta && (
-                <CtaLink cta={hero.cta} className={buttonClasses('primary', 'px-6')}>
-                  {hero.cta.label}
-                  <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
-                </CtaLink>
-              )}
-              {hero.cta2 && showreel && (
-                <CtaLink cta={hero.cta2} className={buttonClasses('ghost', 'border border-border px-5')}>
+              {showreel && hero.cta2 ? (
+                <CtaLink cta={hero.cta2} className={cn(secondaryClass, 'ps-2')}>
                   <span className="inline-flex size-7 items-center justify-center rounded-pill bg-primary text-on-primary">
                     <Play aria-hidden="true" className="size-3.5 translate-x-px fill-current" />
                   </span>
                   {hero.cta2.label}
                 </CtaLink>
+              ) : (
+                <Link href="/services" className={secondaryClass}>
+                  {t('actions.explore_services')}
+                </Link>
               )}
             </div>
-
-            {stats.length > 0 && (
-              <ul className="mt-10 flex flex-wrap gap-2.5">
-                {stats.slice(0, 3).map((stat) => (
-                  <li
-                    key={stat.label}
-                    className="inline-flex items-baseline gap-2 rounded-pill border border-border bg-surface/70 px-4 py-2 text-sm backdrop-blur"
-                  >
-                    <span className="font-bold text-text" dir="ltr">
-                      {stat.prefix}
-                      {stat.value}
-                      {stat.suffix}
-                    </span>
-                    <span className="text-muted">{stat.label}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </div>
       </div>

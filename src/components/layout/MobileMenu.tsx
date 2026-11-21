@@ -107,8 +107,8 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
             </div>
 
             <div className="relative flex min-h-full flex-col">
-              <div className="container-page flex h-18 items-center justify-between">
-                <Logo variant="mark" height={34} alt={site.settings.site_name} />
+              <div className="container-page flex h-18 items-center justify-between md:h-19">
+                <Logo variant="horizontal" height={32} alt={site.settings.site_name} />
                 <button
                   type="button"
                   onClick={onClose}

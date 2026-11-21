@@ -5,8 +5,10 @@ import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 
 /**
- * Closing call-to-action band (home, about, and `cta` page blocks).
- * Brand gradient royal → iris in both themes, with the white pixel mark bleeding off the end edge.
+ * Closing call-to-action band (home, about, services, category pages and `cta` page blocks).
+ * Brand gradient royal → iris in both themes, the large white pixel mark bleeding off the
+ * inline-end edge at low opacity; H2 + one line + response-time chip, then two buttons.
+ * No outer glow; tight spacing so it sits close to the footer.
  */
 export function ContactCtaBand({
   title,
@@ -30,13 +32,20 @@ export function ContactCtaBand({
   className?: string;
 }) {
   const headingId = `${id}-title`;
+  // The response time always shows as the chip; if the CMS line repeats it, it is taken out of the line.
+  const chip = responseTime?.trim() || null;
+  const line = (chip && subtitle ? subtitle.replace(chip, '') : (subtitle ?? '')).trim() || null;
 
   return (
-    <section id={id} aria-labelledby={title ? headingId : undefined} className={cn('py-16 md:py-24', className)}>
+    <section
+      id={id}
+      aria-labelledby={title ? headingId : undefined}
+      className={cn('py-[clamp(40px,5vw,72px)]', className)}
+    >
       <div className="container-page">
         <div
           data-reveal
-          className="relative isolate overflow-hidden rounded-[28px] bg-linear-to-br from-royal to-iris px-6 py-14 text-on-primary shadow-[0_40px_120px_-40px_var(--brand-iris)] md:px-14 md:py-20"
+          className="relative isolate overflow-clip rounded-[28px] bg-linear-to-br from-royal to-iris px-6 py-12 text-on-primary md:px-12 md:py-16 lg:px-16"
         >
           {/* Large pixel mark, low opacity, bleeding off the inline-end edge. */}
           <Image
@@ -46,28 +55,26 @@ export function ContactCtaBand({
             height={284}
             unoptimized
             aria-hidden="true"
-            className="pointer-events-none absolute -end-16 -bottom-24 -z-10 h-[150%] w-auto opacity-[0.12] select-none md:-end-10 md:h-[170%]"
-          />
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 -z-20 bg-[radial-gradient(60%_80%_at_85%_10%,color-mix(in_oklab,var(--brand-lavender)_55%,transparent),transparent)]"
+            className="pointer-events-none absolute -end-20 top-1/2 -z-10 h-[150%] w-auto -translate-y-1/2 opacity-[0.09] select-none md:-end-12 md:h-[170%] rtl:-scale-x-100"
           />
 
-          <div className="flex max-w-2xl flex-col items-start gap-6">
-            {title && (
-              <h2 id={headingId} className="text-heading text-balance">
-                {title}
-              </h2>
-            )}
-            {subtitle && <p className="text-lg text-pretty opacity-85 md:text-xl">{subtitle}</p>}
-            {/* Skip the chip when the subtitle already says it. */}
-            {responseTime && !subtitle?.includes(responseTime) && (
-              <p className="inline-flex items-center gap-2 rounded-pill bg-on-primary/12 px-4 py-2 text-sm backdrop-blur">
-                <Clock aria-hidden="true" className="size-4" />
-                {responseTime}
-              </p>
-            )}
-            <div className="mt-2 flex flex-wrap gap-3">
+          <div className="grid items-end gap-8 lg:grid-cols-[1fr_auto] lg:gap-12">
+            <div className="flex max-w-2xl flex-col items-start gap-4">
+              {title && (
+                <h2 id={headingId} className="text-heading text-balance">
+                  {title}
+                </h2>
+              )}
+              {line && <p className="text-lead text-pretty opacity-85">{line}</p>}
+              {chip && (
+                <p className="mt-1 inline-flex items-center gap-2 rounded-pill bg-on-primary/12 px-4 py-1.5 text-meta">
+                  <Clock aria-hidden="true" className="size-4" />
+                  {chip}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
               <Link
                 href={ctaHref}
                 className={buttonClasses('primary', 'bg-on-primary px-6 text-royal shadow-none hover:bg-pearl')}

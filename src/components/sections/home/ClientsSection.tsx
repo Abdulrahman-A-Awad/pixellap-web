@@ -37,7 +37,7 @@ export function ClientsSection({ section }: { section: ClientsData }) {
   if (section.items.length === 0) return null;
 
   return (
-    <section id="clients" aria-labelledby="clients-title" className="py-20 md:py-24">
+    <section id="clients" aria-labelledby="clients-title" className="section-y">
       <div className="container-page flex flex-col gap-10">
         <SectionHeading
           eyebrow={section.eyebrow}

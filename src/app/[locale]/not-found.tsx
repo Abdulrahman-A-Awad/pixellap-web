@@ -11,11 +11,11 @@ export default function NotFound() {
 
   return (
     <section className="relative isolate flex min-h-[80dvh] items-center pt-24">
-      <PixelField seed={404} />
+      <PixelField seed={404} corner="bottom-end" count={9} />
       <div className="container-page flex flex-col items-start gap-6">
         <p className="text-sm font-bold text-link">404</p>
-        <h1 className="max-w-3xl text-display">{t('misc.not_found_title')}</h1>
-        <p className="max-w-xl text-lg text-muted">{t('misc.not_found_text')}</p>
+        <h1 className="max-w-3xl text-page-title">{t('misc.not_found_title')}</h1>
+        <p className="measure text-lead text-muted">{t('misc.not_found_text')}</p>
         <Link href="/" className={buttonClasses('primary')}>
           <ArrowLeft aria-hidden="true" className="size-4 rtl:-scale-x-100" />
           {t('actions.back_home')}

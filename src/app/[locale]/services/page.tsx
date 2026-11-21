@@ -37,7 +37,7 @@ export default async function ServicesPage({ params }: PageProps<'/[locale]/serv
 
   return (
     <>
-      <PageHero title={page.title} subtitle={page.subtitle} image={page.hero} seed={5} />
+      <PageHero title={page.title} subtitle={page.subtitle} image={page.hero} />
 
       <section aria-label={page.title} className="pb-12">
         <div className="container-page">

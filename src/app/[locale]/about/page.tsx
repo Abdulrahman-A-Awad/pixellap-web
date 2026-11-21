@@ -39,7 +39,7 @@ export default async function AboutPage({ params }: PageProps<'/[locale]/about'>
 
   return (
     <>
-      <PageHero title={page.title} subtitle={page.subtitle} image={page.hero} seed={3} />
+      <PageHero title={page.title} subtitle={page.subtitle} image={page.hero} />
 
       <PageBlocks
         blocks={page.blocks}

@@ -89,7 +89,7 @@ export default async function CategoryPage({ params }: PageProps<'/[locale]/serv
             </h2>
             <div
               data-reveal
-              className="prose-rich max-w-[68ch] text-lg text-muted"
+              className="prose-rich measure text-lead text-muted"
               dangerouslySetInnerHTML={{ __html: category.description }}
             />
           </div>
@@ -128,7 +128,20 @@ export default async function CategoryPage({ params }: PageProps<'/[locale]/serv
         </section>
       )}
 
-      <FaqSection faqs={category.faqs} scope={category.slug} id="category-faq" title={t('services.faq_title')} />
+      <FaqSection
+        faqs={category.faqs}
+        scope={category.slug}
+        id="category-faq"
+        title={t('services.faq_title')}
+        help={{
+          title: t('faq.help_title'),
+          text: t('faq.help_text'),
+          contactLabel: t('faq.help_cta'),
+          contactHref: `/contact?service=${category.slug}`,
+          whatsappUrl: whatsappUrl(site.settings),
+          whatsappLabel: t('contact.whatsapp'),
+        }}
+      />
 
       {/* Other categories. */}
       {others.length > 0 && (
@@ -164,7 +177,7 @@ export default async function CategoryPage({ params }: PageProps<'/[locale]/serv
                       <div className="flex flex-1 flex-col gap-2 p-5">
                         <div className="flex items-center gap-3">
                           <CategoryIcon icon={other.icon} index={otherIndex} size="sm" />
-                          <h3 className="font-bold">{other.title}</h3>
+                          <h3 className="text-lg font-bold">{other.title}</h3>
                         </div>
                         <p className="line-clamp-2 text-sm text-muted">{other.excerpt}</p>
                         <span className="mt-auto inline-flex items-center gap-2 pt-2 text-sm text-link">

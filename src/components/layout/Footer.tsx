@@ -1,13 +1,14 @@
 import { Clock, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { Logo } from '@/components/brand/Logo';
-import { PixelField } from '@/components/brand/PixelField';
 import { Link } from '@/i18n/navigation';
 import type { Site } from '@/lib/api/types';
 import { settingValue, socialLinks, whatsappUrl } from '@/lib/site/settings';
 import type { Translate } from '@/lib/site/translate';
 import { CurrentYear } from './CurrentYear';
+import { LanguageSwitch } from './LanguageSwitch';
 import { NAV_ITEMS } from './nav';
+import { ThemeToggle } from './ThemeToggle';
 
 /** Network names are proper nouns (not translated copy). */
 const NETWORKS: Record<string, string> = {
@@ -20,7 +21,7 @@ const NETWORKS: Record<string, string> = {
 };
 
 function Heading({ children }: { children: ReactNode }) {
-  return <h2 className="mb-4 text-sm font-bold tracking-wide text-text">{children}</h2>;
+  return <h2 className="mb-5 text-meta font-bold text-text">{children}</h2>;
 }
 
 const linkClass = 'text-muted transition-colors hover:text-text';
@@ -36,13 +37,11 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
   const socials = socialLinks(settings);
 
   return (
-    <footer className="relative isolate mt-24 overflow-hidden border-t border-border bg-surface">
-      <PixelField seed={42} rows={8} density={0.05} className="opacity-60" />
-
-      <div className="container-page grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.2fr_1.4fr]">
-        <div className="flex flex-col gap-4">
+    <footer className="border-t border-border bg-surface">
+      <div className="container-page grid gap-10 py-14 md:grid-cols-2 md:py-16 lg:grid-cols-12 lg:gap-8">
+        <div className="flex flex-col gap-5 lg:col-span-4">
           <Link href="/" className="inline-flex w-fit rounded-md" aria-label={settings.site_name}>
-            <Logo height={64} alt={settings.site_name} />
+            <Logo variant="horizontal" height={48} alt={settings.site_name} />
           </Link>
           <p className="max-w-xs text-muted">{settings.tagline}</p>
           {socials.length > 0 && (
@@ -66,7 +65,7 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
           )}
         </div>
 
-        <nav aria-label={t('footer.quick_links')}>
+        <nav aria-label={t('footer.quick_links')} className="lg:col-span-2">
           <Heading>{t('footer.quick_links')}</Heading>
           <ul className="flex flex-col gap-2.5">
             {NAV_ITEMS.map((item) => (
@@ -79,7 +78,7 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
           </ul>
         </nav>
 
-        <nav aria-label={t('footer.services')}>
+        <nav aria-label={t('footer.services')} className="lg:col-span-3">
           <Heading>{t('footer.services')}</Heading>
           <ul className="flex flex-col gap-2.5">
             {site.nav.categories.map((category) => (
@@ -92,7 +91,7 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
           </ul>
         </nav>
 
-        <div>
+        <div className="lg:col-span-3">
           <Heading>{t('footer.contact')}</Heading>
           <ul className="flex flex-col gap-3 text-muted">
             {email && (
@@ -139,15 +138,24 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
       </div>
 
       <div className="border-t border-border">
-        <div className="container-page flex flex-col gap-2 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © <CurrentYear /> {settings.site_name}. {t('footer.rights')}
-          </p>
-          {vat && (
+        <div className="container-page flex flex-col gap-3 py-5 text-meta text-muted sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:gap-6">
             <p>
-              {t('footer.vat')} <span dir="ltr">{vat}</span>
+              © <CurrentYear /> {settings.site_name}. {t('footer.rights')}
             </p>
-          )}
+            {vat && (
+              <p>
+                {t('footer.vat')} <span dir="ltr">{vat}</span>
+              </p>
+            )}
+          </div>
+          <div className="-ms-3 flex items-center gap-1 sm:ms-0 sm:-me-3">
+            {/* LanguageSwitch reads usePathname(): request-time on routes with unknown params. */}
+            <Suspense fallback={null}>
+              <LanguageSwitch />
+            </Suspense>
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </footer>

@@ -7,11 +7,13 @@ import { Link } from '@/i18n/navigation';
 import type { HomeCategoryCard } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
 
-const MAX_TAGS = 6;
+const MAX_TAGS = 4;
 
 /**
- * One stacking card. The whole card is clickable through a single stretched link
- * ("Learn more"), so screen readers get one link per card with a clear name.
+ * One stacking card: copy (number + icon, title, 2-line excerpt, ≤ 4 tags + "+N", "Learn more")
+ * and a full-bleed photo on the inline-end side (~45%). Desktop height min(78vh, 560px) so the next
+ * card's top edge peeks below it. The whole card is clickable through a single stretched link, so
+ * screen readers get one link per card with a clear name.
  */
 export function ServiceCard({
   category,
@@ -34,18 +36,20 @@ export function ServiceCard({
       data-stack-card
       aria-labelledby={titleId}
       className="lg:sticky"
-      style={{ top: `calc(6.5rem + ${index} * 1.75rem)`, zIndex: index + 1 }}
+      style={{ top: `calc(6.5rem + ${index} * 1.25rem)`, zIndex: index + 1 }}
     >
       <div
         data-stack-inner
         className={cn(
-          'group relative grid overflow-hidden rounded-card border border-border bg-surface shadow-[0_24px_60px_-40px_color-mix(in_oklab,var(--brand-black)_60%,transparent)]',
-          'transition-[border-color,box-shadow] duration-500 will-change-transform md:grid-cols-[1.25fr_1fr]',
+          'group relative grid overflow-hidden rounded-[24px] border border-border bg-card',
+          'shadow-[0_30px_60px_-45px_color-mix(in_oklab,var(--brand-black)_70%,transparent)]',
+          'transition-[border-color,box-shadow] duration-500 will-change-transform',
+          'md:grid-cols-[55fr_45fr] lg:h-[min(78vh,560px)]',
           'hover:border-lavender/60 hover:shadow-[0_0_0_1px_var(--brand-lavender),0_0_48px_-12px_var(--accent-glow)]',
           'focus-within:border-lavender/60',
         )}
       >
-        <div className="flex flex-col gap-6 p-6 md:p-10">
+        <div className="flex min-w-0 flex-col gap-5 p-6 md:p-9 lg:p-12">
           <div className="flex items-center justify-between gap-4">
             <PixelDigits
               value={number}
@@ -56,22 +60,22 @@ export function ServiceCard({
             <CategoryIcon icon={category.icon} index={index} />
           </div>
 
-          <div className="flex flex-col gap-3">
-            <h3 id={titleId} className="text-2xl font-bold text-balance md:text-3xl">
+          <div className="mt-auto flex flex-col gap-3 md:mt-6 lg:mt-auto">
+            <h3 id={titleId} className="text-heading text-balance">
               {category.title}
             </h3>
-            <p className="max-w-prose text-muted">{category.excerpt}</p>
+            <p className="line-clamp-2 measure text-muted">{category.excerpt}</p>
           </div>
 
           {tags.length > 0 && (
             <ul className="flex flex-wrap gap-2">
               {tags.map((tag) => (
-                <li key={tag} className="rounded-pill border border-border bg-bg/60 px-3 py-1 text-xs text-muted">
+                <li key={tag} className="rounded-pill border border-border px-3 py-1 text-meta text-muted">
                   {tag}
                 </li>
               ))}
               {more > 0 && (
-                <li className="rounded-pill bg-surface-2 px-3 py-1 text-xs font-bold text-link">
+                <li className="rounded-pill bg-surface-2 px-3 py-1 text-meta font-bold text-link">
                   <bdi dir="ltr">+{more}</bdi>
                 </li>
               )}
@@ -80,25 +84,27 @@ export function ServiceCard({
 
           <Link
             href={`/services/${category.slug}`}
-            className="mt-auto inline-flex w-fit items-center gap-2 text-sm font-bold text-link after:absolute after:inset-0 after:content-['']"
+            className="mt-2 inline-flex min-h-11 w-fit items-center gap-2 font-bold text-link after:absolute after:inset-0 after:content-[''] lg:mt-auto"
           >
             {learnMore}
             <span className="sr-only">: {category.title}</span>
-            <ArrowRight
+            <span
               aria-hidden="true"
-              className="size-4 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1"
-            />
+              className="inline-flex size-9 items-center justify-center rounded-pill border border-border transition-[transform,background-color,border-color,color] duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-on-primary"
+            >
+              <ArrowRight className="size-4 rtl:-scale-x-100" />
+            </span>
           </Link>
         </div>
 
-        {/* Cover on the inline-end side (grid order follows dir). */}
-        <div className="relative min-h-56 overflow-hidden bg-surface-2 md:min-h-full">
+        {/* Full-bleed photo on the inline-end side (grid order follows dir); on top on phones. */}
+        <div className="relative order-first aspect-[16/10] overflow-hidden bg-surface-2 md:order-none md:aspect-auto md:h-full">
           {category.cover ? (
             <Image
               src={category.cover.conversions?.lg ?? category.cover.url}
               alt={category.cover.alt}
               fill
-              sizes="(min-width: 1280px) 520px, (min-width: 768px) 42vw, 100vw"
+              sizes="(min-width: 1280px) 560px, (min-width: 768px) 45vw, 100vw"
               className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-[1.04]"
             />
           ) : (

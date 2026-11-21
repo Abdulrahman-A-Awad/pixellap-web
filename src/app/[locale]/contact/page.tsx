@@ -32,7 +32,7 @@ export default async function ContactPage({ params }: PageProps<'/[locale]/conta
 
   return (
     <>
-      <PageHero title={page.title} subtitle={page.subtitle} seed={9} />
+      <PageHero title={page.title} subtitle={page.subtitle} />
 
       <section className="container-page grid items-start gap-8 lg:grid-cols-[1.5fr_1fr] lg:gap-12">
         <div className="rounded-card border border-border bg-surface p-6 md:p-8">

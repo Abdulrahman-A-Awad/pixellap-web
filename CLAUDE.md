@@ -69,14 +69,28 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   Never add React state per frame. Scratch objects live in refs (React Compiler forbids mutating memo values).
 - Reflections come from `three/StudioEnvironment.tsx` (lightformer panels → PMREM). Do not use drei
   `<Environment>`: it bundles HDR/EXR loaders. No network assets in the scene.
+- Desktop (motion allowed): the scene chunk is `import()`ed when `SceneGate` evaluates (parallel to hydration) and the
+  scene mounts right after hydration; phones keep the idle gate. Intro = `INTRO_SECONDS` (1.2 s). Lenis lerp 0.13, touch native.
 - Budgets: 3D path ≤ 250 KB gzip (three+R3F ≈ 233 KB, scene ≈ 11 KB; postprocessing ≈ 22 KB lazy, high+dark only).
   Nothing heavy in the initial route: the scene, GSAP, Lenis, Motion (menu / reel dialog) load after idle or on use.
 - Showreel: `ui/VideoModal` intercepts any link to `#reel` (YouTube/Vimeo privacy embeds or direct files).
 
 ## Sections & motion conventions
 
-- Home renders `/home` sections in API order (`app/[locale]/page.tsx` → `renderSection`). Sections live in
-  `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `PageHero`, `ui/CtaLink`.
+- **Type scale = utilities only** (globals.css, fluid): `text-display` (home hero H1) · `text-page-title` (inner-page H1;
+  a category title must fit 2 lines at 1280) · `text-heading` (H2) · `text-title` (H3/cards) · `text-lead` (subtitles) ·
+  `text-meta` (small). Body is 1rem / ar 1.0625rem. Paragraph width: `measure` (65ch). No one-off font sizes.
+- **Rhythm:** sections use `section-y`; the header block is always `SectionHeading` (start-aligned; `action` slot for an
+  end-side link). Home alternates bands (`tone-surface` on every other content section, set in `page.tsx`); cards use
+  `bg-card` (= surface on bg sections, bg on surface sections) so they read on both.
+- **PixelField:** corner-only (`corner`, 6–10 squares), lives in the page gutter outside the content column, renders
+  ≥ 1400px only, opacity capped by `--pixel-opacity` (0.35 dark / 0.2 light). Never in heroes or the header.
+- Images on cards are never under a scrim: text goes on a solid card panel (bento, rail, stacking cards).
+- Logo: `variant="horizontal"` in header (40px / 32px mobile) and footer; generated from the stacked logo's paths
+  (`public/brand/pixellap-logo-h*.svg`).
+- Home renders `/home` sections in API order (`app/[locale]/page.tsx` → `renderSection`). The stats render inside the
+  About section (`AboutTeaser`); the standalone `StatsSection` only shows on home when About is hidden (and on /about).
+  Sections live in `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `PageHero`, `ui/CtaLink`.
 - **Reveal on scroll:** add `data-reveal` (stagger with `style={{'--reveal-i': n}}`). Pure CSS scroll-driven animation
   (`animation-timeline: view()`, in `@supports` + no-preference motion): no JS, never touches server HTML; on-screen
   content is already in its final state; unsupported browsers just show it. Ancestors of `[data-reveal]` must use

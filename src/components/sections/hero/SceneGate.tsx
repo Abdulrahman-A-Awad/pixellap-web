@@ -10,6 +10,7 @@ import { hasLoopVideo, pickVariant, VERTICAL_QUERY } from '@/lib/hero/media';
 import {
   useDocumentHidden,
   useFirstInteraction,
+  useHydrated,
   useIdleAfterLoad,
   useMediaQuery,
   useThemeColors,
@@ -18,7 +19,17 @@ import { FRAME_MEDIA_CLASS, HeroFrame } from './HeroFrame';
 import { HeroPlaceholder } from './HeroPlaceholder';
 
 // The 3D scene is never part of the initial route chunk and never server-rendered.
-const PixelScene = dynamic(() => import('@/components/three/PixelScene'), { ssr: false });
+const loadScene = () => import('@/components/three/PixelScene');
+const PixelScene = dynamic(loadScene, { ssr: false });
+
+/**
+ * Desktop with motion allowed: start downloading the scene chunk the moment this module is evaluated
+ * (in parallel with hydration) so it is ready right after it. Acts as the modulepreload: Turbopack's
+ * hashed chunk URLs are not known to the server HTML, so a <link rel=modulepreload> cannot be emitted.
+ * Phones never prefetch here (they may get the video tier, and the LCP must stay the copy).
+ */
+const DESKTOP_SCENE_QUERY = '(min-width: 1024px) and (prefers-reduced-motion: no-preference)';
+if (typeof window !== 'undefined' && window.matchMedia(DESKTOP_SCENE_QUERY).matches) void loadScene();
 
 interface SceneGateProps {
   media: HeroMedia;
@@ -60,9 +71,11 @@ export function SceneGate({ media, progress, pointer, className }: SceneGateProp
   const desktop = useMediaQuery('(min-width: 1024px)');
   const vertical = useMediaQuery(VERTICAL_QUERY);
   const hidden = useDocumentHidden();
-  // Mount the scene only after load + idle: creating the WebGL context and compiling shaders
-  // blocks the main thread, and must never delay the LCP (the server-rendered copy).
+  // Phones: mount the scene only after load + idle (creating the WebGL context blocks the main thread
+  // and must never delay the LCP). Desktop: right after hydration — the poster covers the hero until
+  // the first frame, and the chunk was already fetched during hydration (see loadScene above).
   const idle = useIdleAfterLoad();
+  const hydrated = useHydrated();
   // Phones: posters / the loop video wait for the first interaction, so they never become a late LCP.
   const interacted = useFirstInteraction();
 
@@ -117,7 +130,7 @@ export function SceneGate({ media, progress, pointer, className }: SceneGateProp
       <HeroPlaceholder
         poster={media.wide.poster}
         shimmer={tier === null || (isScene && !ready)}
-        className={cn('transition-opacity duration-700', ((isScene && ready) || showFrame) && 'opacity-0')}
+        className={cn('transition-opacity duration-500', ((isScene && ready) || showFrame) && 'opacity-0')}
       />
 
       {showFrame && picked && (
@@ -151,8 +164,8 @@ export function SceneGate({ media, progress, pointer, className }: SceneGateProp
         </HeroFrame>
       )}
 
-      {isScene && colors && idle && (
-        <div className={cn('absolute inset-0 opacity-0 transition-opacity duration-1000', ready && 'opacity-100')}>
+      {isScene && colors && (desktop ? hydrated : idle) && (
+        <div className={cn('absolute inset-0 opacity-0 transition-opacity duration-500', ready && 'opacity-100')}>
           <PixelScene
             tier={tier}
             theme={colors.theme}

@@ -54,7 +54,7 @@ export function StackingCards({ children }: { children: ReactNode }) {
   }, [idle]);
 
   return (
-    <div ref={root} className="flex flex-col gap-6 lg:gap-10">
+    <div ref={root} className="flex flex-col gap-6 lg:gap-8">
       {children}
     </div>
   );

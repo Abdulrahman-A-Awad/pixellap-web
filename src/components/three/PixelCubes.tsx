@@ -27,7 +27,7 @@ interface PixelCubesProps {
   onFirstFrame?: () => void;
 }
 
-const INTRO_SECONDS = 1.8;
+const INTRO_SECONDS = 1.2;
 const MAX_PARALLAX = THREE.MathUtils.degToRad(4);
 const CAMERA_DISTANCE = 30;
 const CAMERA_HEIGHT = 1.2;

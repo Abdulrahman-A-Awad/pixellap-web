@@ -61,18 +61,18 @@ export function Header() {
       <header
         className={cn(
           'fixed inset-x-0 top-0 z-40 border-b transition-[transform,background-color,border-color,backdrop-filter] duration-300 ease-out-expo',
-          solid ? 'border-border bg-bg/75 backdrop-blur-xl' : 'border-transparent bg-transparent',
+          solid ? 'border-border bg-bg/85 backdrop-blur-xl backdrop-saturate-150' : 'border-transparent bg-transparent',
           hidden && !menuOpen ? '-translate-y-full' : 'translate-y-0',
         )}
       >
-        <div className="container-page flex h-18 items-center gap-4">
+        <div className="container-page flex h-18 items-center gap-4 md:h-19">
           <Link href="/" className="me-auto inline-flex items-center rounded-md" aria-label={siteName}>
-            <Logo variant="logo" height={44} alt={siteName} priority className="hidden sm:inline-flex" />
-            <Logo variant="mark" height={34} alt={siteName} priority className="sm:hidden" />
+            <Logo variant="horizontal" height={40} alt={siteName} priority className="hidden md:inline-flex" />
+            <Logo variant="horizontal" height={32} alt={siteName} priority className="md:hidden" />
           </Link>
 
           <nav aria-label={t('misc.main_navigation')} className="hidden lg:block">
-            <ul className="flex items-center gap-1">
+            <ul className="flex items-center gap-2">
               {NAV_ITEMS.map((item) => {
                 const active = isActive(pathname, item.href);
                 return (
@@ -81,7 +81,7 @@ export function Header() {
                       href={item.href}
                       aria-current={active ? 'page' : undefined}
                       className={cn(
-                        'relative inline-flex min-h-11 items-center rounded-pill px-4 text-sm transition-colors',
+                        'relative inline-flex min-h-11 items-center rounded-pill px-4 text-[0.95rem] transition-colors',
                         active ? 'text-text' : 'text-muted hover:text-text',
                       )}
                     >

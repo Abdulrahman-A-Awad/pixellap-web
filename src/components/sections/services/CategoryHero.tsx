@@ -3,7 +3,6 @@ import Image from 'next/image';
 import type { ReactNode } from 'react';
 import { PixelComposition } from '@/components/brand/PixelComposition';
 import { PixelDigits } from '@/components/brand/PixelDigits';
-import { PixelField } from '@/components/brand/PixelField';
 import { buttonClasses } from '@/components/ui/Button';
 import { Link } from '@/i18n/navigation';
 import type { ServiceCategoryDetail } from '@/lib/api/types';
@@ -30,17 +29,16 @@ export function CategoryHero({
   const cover = category.cover?.conversions?.lg ?? category.cover?.url ?? null;
 
   return (
-    <section className="relative isolate overflow-hidden pt-28 pb-14 md:pt-36 md:pb-20">
-      <PixelField seed={index * 7 + 13} density={0.05} className="opacity-60" />
-      <div className="container-page grid items-center gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+    <section className="relative pt-28 pb-14 md:pt-36 md:pb-16">
+      <div className="container-page grid items-center gap-10 lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] lg:gap-16">
         <div className="flex flex-col items-start gap-6">
           {breadcrumb}
           <div className="flex items-center gap-4">
             <PixelDigits value={number} cell={6} className="text-link" />
             <CategoryIcon icon={category.icon} index={index} size="lg" />
           </div>
-          <h1 className="text-display text-balance">{category.title}</h1>
-          <p className="max-w-xl text-lg text-pretty text-muted md:text-xl">{category.excerpt}</p>
+          <h1 className="text-page-title text-balance">{category.title}</h1>
+          <p className="measure text-lead text-pretty text-muted">{category.excerpt}</p>
           <Link
             href={{ pathname: '/contact', query: { service: category.slug } }}
             className={buttonClasses('primary', 'px-6')}
@@ -50,7 +48,7 @@ export function CategoryHero({
           </Link>
         </div>
 
-        <div className="relative aspect-[4/3] overflow-hidden rounded-card border border-border bg-surface lg:aspect-[5/6] xl:aspect-[4/4.2]">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-card border border-border bg-surface lg:aspect-[4/5]">
           {cover ? (
             <Image
               src={cover}

@@ -126,20 +126,12 @@ export type SiteResponse = ApiEnvelope<Site>;
 
 /* ────────────────────────────────── /home ─────────────────────────────────── */
 
-export type HomeSectionKey =
-  | 'hero'
-  | 'stats'
-  | 'services'
-  | 'process'
-  | 'clients'
-  | 'about'
-  | 'faq'
-  | 'contact_cta';
+export type HomeSectionKey = 'hero' | 'stats' | 'services' | 'process' | 'clients' | 'about' | 'faq' | 'contact_cta';
 
 /** Fields every section carries. Unused fields for a section are always null. */
 interface HomeSectionBase<K extends HomeSectionKey> {
   key: K;
-  /** every section except contact_cta */
+  /** every section except hero and contact_cta */
   eyebrow: string | null;
   title: string | null;
   subtitle: PlainText | null;
@@ -362,13 +354,7 @@ export type ContactResponse = ApiEnvelope<{ message: string }>;
 /* ───────────────────────── Revalidation webhook (in) ──────────────────────── */
 
 /** Cache tags the API sends to the frontend revalidate route. */
-export type CacheTag =
-  | 'site'
-  | 'home'
-  | 'categories'
-  | 'sitemap'
-  | `category:${string}`
-  | `page:${PageKey}`;
+export type CacheTag = 'site' | 'home' | 'categories' | 'sitemap' | `category:${string}` | `page:${PageKey}`;
 
 /** Body of POST {FRONTEND_REVALIDATE_URL} (header X-Revalidate-Secret). */
 export interface RevalidatePayload {

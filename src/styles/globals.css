@@ -35,7 +35,10 @@
   --link: #9d7bfa;
   --danger: #ff8a8a;
   --warning: #ffd27a;
-  --pixel-opacity: 1;
+  /* Decorative pixel fields (PixelField): never louder than this. */
+  --pixel-opacity: 0.35;
+  /* Card fill: --surface on --bg sections, --bg on surface sections (.tone-surface). */
+  --card: var(--surface);
 }
 
 .light {
@@ -53,7 +56,15 @@
   --link: #3a119e;
   --danger: #b42318;
   --warning: #8a4b00;
-  --pixel-opacity: 0.45;
+  --pixel-opacity: 0.2;
+  --card: var(--surface);
+}
+
+/* Alternate section background (home rhythm): cards inside switch to --bg so they still read. */
+.tone-surface {
+  --card: var(--bg);
+  background-color: var(--surface);
+  border-block: 1px solid var(--border);
 }
 
 /*
@@ -71,6 +82,7 @@
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-card: var(--card);
   --color-border: var(--border);
   --color-text: var(--text);
   --color-muted: var(--text-muted);
@@ -105,7 +117,8 @@
   body {
     background-color: var(--bg);
     color: var(--text);
-    line-height: 1.6;
+    font-size: 1rem;
+    line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     /* RH-Zak's space glyph is very narrow ("Small Pixels.BIG"): open words up a little. */
     word-spacing: 0.12em;
@@ -118,6 +131,7 @@
   /* Arabic script needs more vertical room (RH-Zak has tall ascenders and deep descenders). */
   :lang(ar) body,
   body:lang(ar) {
+    font-size: 1.0625rem;
     line-height: 1.85;
   }
 
@@ -152,29 +166,84 @@
   padding-inline: clamp(1rem, 4vw, 2.5rem);
 }
 
-/* Display headings. Tight tracking only in Latin script (none in Arabic). */
+/*
+ * Type scale (fluid). Use these utilities, never one-off sizes:
+ *   text-display     home hero H1
+ *   text-page-title  inner-page hero H1 (about / services / category / contact)
+ *   text-heading     section H2
+ *   text-title       H3 / card titles
+ *   text-lead        subtitles and lead paragraphs
+ *   text-meta        small / meta text
+ * Body is 1rem (ar 1.0625rem) on <body>. Tight tracking only in Latin (never in Arabic).
+ */
 @utility text-display {
-  font-size: clamp(2.5rem, 6vw, 6rem);
-  line-height: 1.05;
+  font-size: clamp(2.5rem, 4.6vw, 4.5rem);
+  line-height: 1.1;
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
 
   &:lang(ar) {
     letter-spacing: 0;
-    line-height: 1.35;
+    line-height: 1.25;
+  }
+}
+
+@utility text-page-title {
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  line-height: 1.12;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+
+  &:lang(ar) {
+    letter-spacing: 0;
+    line-height: 1.3;
   }
 }
 
 @utility text-heading {
-  font-size: clamp(1.75rem, 3.5vw, 3rem);
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: -0.015em;
 
   &:lang(ar) {
     letter-spacing: 0;
-    line-height: 1.45;
+    line-height: 1.4;
   }
+}
+
+@utility text-title {
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  line-height: 1.3;
+  font-weight: 700;
+
+  &:lang(ar) {
+    line-height: 1.5;
+  }
+}
+
+@utility text-lead {
+  font-size: clamp(1.125rem, 1.07rem + 0.25vw, 1.25rem);
+  line-height: 1.6;
+
+  &:lang(ar) {
+    line-height: 1.8;
+  }
+}
+
+@utility text-meta {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Comfortable paragraph measure. */
+@utility measure {
+  max-width: 65ch;
+}
+
+/* Vertical rhythm: every content section uses the same padding. */
+@utility section-y {
+  padding-block: clamp(64px, 8vw, 112px);
 }
 
 /*
@@ -193,6 +262,38 @@
 @utility digits-fixed {
   display: inline-block;
   min-width: calc(var(--len, 1) * 0.5em);
+}
+
+/* ───────────────────────────── Pixel field (corner decoration) ───────────────────────────── */
+
+/*
+ * Square box in the page gutter outside the content column: (100% − 1280px) / 2 + the container's
+ * 2.5rem padding, capped at 220px. Faded towards the content with a radial mask from its corner.
+ */
+.pixel-field {
+  --fx: 100%;
+  --fy: 0%;
+  width: min(220px, calc((100% - var(--container-page)) / 2 + 2.5rem - 16px));
+  aspect-ratio: 1;
+  inset-inline-end: 0;
+  top: 0;
+  opacity: var(--pixel-opacity);
+  mask-image: radial-gradient(circle at var(--fx) var(--fy), #000 20%, transparent 78%);
+}
+.pixel-field[data-corner$='start'] {
+  inset-inline: 0 auto;
+  --fx: 0%;
+}
+.pixel-field[data-corner^='bottom'] {
+  top: auto;
+  bottom: 0;
+  --fy: 100%;
+}
+[dir='rtl'] .pixel-field[data-corner$='end'] {
+  --fx: 0%;
+}
+[dir='rtl'] .pixel-field[data-corner$='start'] {
+  --fx: 100%;
 }
 
 /* ───────────────────────────── Motion ───────────────────────────── */
@@ -288,7 +389,7 @@ html.lenis body {
 
 .light .hero-frame {
   /* Below the (transparent, overlaid) header. */
-  inset-block: 4.75rem 0.75rem;
+  inset-block: 5.25rem 0.75rem;
   inset-inline: clamp(1rem, 4vw, 2.5rem);
   border-radius: 28px;
   background: var(--brand-black);
@@ -480,12 +581,31 @@ html.lenis body {
 
 /* ───────────────────────────── Process line ───────────────────────────── */
 
+/*
+ * Each step = a 14px node + a card. Phones: vertical timeline, nodes in a 14px column on the
+ * inline-start side (line through their centres). Desktop: one row of cards, nodes above them,
+ * horizontal line from the first node to the last.
+ */
+.process-dot {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  transition:
+    background-color 0.5s,
+    border-color 0.5s,
+    box-shadow 0.5s;
+}
 .process-track,
 .process-line {
   position: absolute;
-  /* Mobile: vertical, through the centre of the 48px step squares on the inline-start side. */
-  inset-block: 24px;
-  inset-inline-start: 23px;
+  /* Mobile: vertical through the node centres (nodes sit 28px below each card top). */
+  inset-block: 35px 24px;
+  inset-inline-start: 6px;
   width: 2px;
   border-radius: 2px;
 }
@@ -496,16 +616,18 @@ html.lenis body {
   background: linear-gradient(var(--brand-lavender), var(--brand-iris));
   transform: scaleY(var(--line, 0));
   transform-origin: top;
-  box-shadow: 0 0 16px var(--accent-glow);
+  box-shadow: 0 0 12px var(--accent-glow);
 }
 @media (min-width: 1024px) {
+  .process-steps {
+    grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+  }
   .process-track,
   .process-line {
-    /* Desktop: horizontal, from the first to the last step (4 columns, 2rem gaps). */
-    inset-block: auto;
-    top: 23px;
-    inset-inline-start: 24px;
-    inset-inline-end: calc((100% - 6rem) / 4 - 24px);
+    /* Desktop: horizontal, first node centre → last node centre. */
+    inset-block: 6px auto;
+    inset-inline-start: 7px;
+    inset-inline-end: calc((100% - (var(--cols, 4) - 1) * 1.25rem) / var(--cols, 4) - 7px);
     width: auto;
     height: 2px;
   }
@@ -522,8 +644,10 @@ html.lenis body {
 .process-step[data-active] .process-dot {
   background: var(--primary);
   border-color: var(--primary);
-  color: var(--on-primary);
-  box-shadow: 0 0 28px -6px var(--accent-glow);
+  box-shadow: 0 0 18px -2px var(--accent-glow);
+}
+.process-step[data-active] > div {
+  border-color: color-mix(in oklab, var(--brand-lavender) 45%, transparent);
 }
 
 /* ───────────────────────────── Clients marquee ───────────────────────────── */

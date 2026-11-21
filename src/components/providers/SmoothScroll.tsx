@@ -24,7 +24,9 @@ export function SmoothScroll() {
         if (cancelled) return;
         gsap.registerPlugin(ScrollTrigger);
 
-        const lenis = new Lenis({ autoRaf: false, lerp: 0.1 });
+        // lerp 0.13: responsive wheel smoothing (0.1 felt laggy). Touch stays native (syncTouch off):
+        // phones scroll with their own momentum, never through Lenis.
+        const lenis = new Lenis({ autoRaf: false, lerp: 0.13, smoothWheel: true, syncTouch: false });
         setLenis(lenis);
         lenis.on('scroll', ScrollTrigger.update);
 

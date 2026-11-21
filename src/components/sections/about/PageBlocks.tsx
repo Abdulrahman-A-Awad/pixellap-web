@@ -30,7 +30,7 @@ function TextBlock({ title, body }: { title: string | null; body: string | null 
       <div className="container-page">
         <div data-reveal className="mx-auto flex max-w-[68ch] flex-col gap-6">
           {title && <h2 className="text-heading text-balance">{title}</h2>}
-          <Paragraphs text={body} className="text-lg text-muted" />
+          <Paragraphs text={body} className="text-lead text-muted" />
         </div>
       </div>
     </section>
@@ -44,7 +44,7 @@ function ImageTextSection({ block, flip }: { block: ImageTextBlock; flip: boolea
       <div className="container-page grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div data-reveal className={cn('flex flex-col gap-6', flip && 'lg:order-2')}>
           {block.title && <h2 className="text-heading text-balance">{block.title}</h2>}
-          <Paragraphs text={block.body} className="text-lg text-muted" />
+          <Paragraphs text={block.body} className="text-lead text-muted" />
         </div>
         <div data-reveal className="relative aspect-[4/3] overflow-hidden rounded-card border border-border bg-surface">
           {block.image ? (
@@ -98,8 +98,8 @@ function MissionVision({ title, items }: { title: string | null; items: PageBloc
                   />
                 ))}
               </span>
-              <h3 className="text-2xl font-bold">{item.title}</h3>
-              <p className={cn('text-lg', i === 0 ? 'opacity-85' : 'text-muted')}>{item.text}</p>
+              <h3 className="text-title">{item.title}</h3>
+              <p className={cn(i === 0 ? 'opacity-85' : 'text-muted')}>{item.text}</p>
             </article>
           ))}
         </div>
@@ -126,7 +126,7 @@ function Values({ title, items }: { title: string | null; items: PageBlockItem[]
               className="flex flex-col gap-4 rounded-card border border-border bg-surface p-7 transition-colors hover:border-lavender/60"
             >
               <PixelDigits value={String(i + 1).padStart(2, '0')} cell={4} className="text-link" />
-              <h3 className="text-xl font-bold">{item.title}</h3>
+              <h3 className="text-title">{item.title}</h3>
               <p className="text-muted">{item.text}</p>
             </li>
           ))}
