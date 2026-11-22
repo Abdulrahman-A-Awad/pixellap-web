@@ -12,29 +12,47 @@ interface PageSeo {
   path: string;
   title?: string | null;
   description?: string | null;
-  /** Absolute image URL for Open Graph (e.g. a page hero or category cover). */
-  image?: string | null;
 }
 
-/** public/og-default.jpg — 1200×630 brand image (cube + tagline), used when nothing else is set. */
+/** public/og-default.jpg — 1200×630 brand image (cube + tagline, JPG ~55 KB), used when nothing else is set. */
 const DEFAULT_OG_IMAGE = '/og-default.jpg';
+
+/** Open Graph locales (WhatsApp / Facebook read these). */
+const OG_LOCALE: Record<Locale, string> = { en: 'en_US', ar: 'ar_AE' };
+
+/** "Page | Site name" in the current language, unless the title already names the site. */
+export function withSiteSuffix(title: string, siteName: string): string {
+  if (!siteName || title.includes(siteName)) return title;
+  return `${title} | ${siteName}`;
+}
 
 function localizedUrl(locale: string, path: string): string {
   return `${SITE_URL}/${locale}${path === '/' ? '' : path}`;
 }
 
 /**
- * Title/description from the page's SEO fields, falling back to the site defaults.
- * Adds canonical, hreflang alternates (en, ar, x-default) and Open Graph.
+ * Title/description from the page's SEO fields, falling back to the site defaults; the title gets the
+ * localized site name as suffix (`settings.site_name`: "Pixellap" / "بكسل لاب").
+ * Adds canonical, hreflang alternates (en, ar, x-default), Open Graph and the Twitter card.
+ *
+ * Share image: always the site sharing image (Settings → SEO, else public/og-default.jpg) — a
+ * 1200×630 JPG that WhatsApp / Facebook / LinkedIn all accept (page photos are large WebP/AVIF of
+ * any ratio, which link previews crop badly or ignore).
  */
-export async function buildMetadata({ locale, path, title, description, image }: PageSeo): Promise<Metadata> {
+export async function buildMetadata({ locale, path, title, description }: PageSeo): Promise<Metadata> {
   const { data: site } = await getSite(locale);
   const { settings } = site;
-  const resolvedTitle = title || settings.seo_default_title;
+  const resolvedTitle = withSiteSuffix(title || settings.seo_default_title, settings.site_name);
   const resolvedDescription = description || settings.seo_default_description;
   const url = localizedUrl(locale, path);
-  // Page image first, then the site-wide sharing image from settings, then the bundled brand image.
-  const ogImage = image || settings.og_image || DEFAULT_OG_IMAGE;
+  const ogImage = {
+    url: settings.og_image || DEFAULT_OG_IMAGE,
+    width: 1200,
+    height: 630,
+    alt: `${settings.site_name} — ${settings.tagline}`,
+    type: 'image/jpeg',
+  };
+  const otherLocales = routing.locales.filter((l) => l !== locale);
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -55,14 +73,15 @@ export async function buildMetadata({ locale, path, title, description, image }:
       siteName: settings.site_name,
       title: resolvedTitle,
       description: resolvedDescription,
-      locale: locale === 'ar' ? 'ar_AE' : 'en_AE',
-      alternateLocale: locale === 'ar' ? ['en_AE'] : ['ar_AE'],
-      images: [ogImage === DEFAULT_OG_IMAGE ? { url: ogImage, width: 1200, height: 630 } : { url: ogImage }],
+      locale: OG_LOCALE[locale],
+      alternateLocale: otherLocales.map((l) => OG_LOCALE[l]),
+      images: [ogImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: resolvedTitle,
       description: resolvedDescription,
+      images: [{ url: ogImage.url, alt: ogImage.alt }],
     },
   };
 }

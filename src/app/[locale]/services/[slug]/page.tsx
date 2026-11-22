@@ -18,7 +18,7 @@ import { routing } from '@/i18n/routing';
 import { getCategories, getCategory, getHome, getSite } from '@/lib/api/endpoints';
 import type { ContactCtaSection } from '@/lib/api/types';
 import { buildMetadata } from '@/lib/seo/metadata';
-import { serviceJsonLd } from '@/lib/seo/structured-data';
+import { alternateSiteName, serviceJsonLd } from '@/lib/seo/structured-data';
 import { plural } from '@/lib/site/format';
 import { settingValue, whatsappUrl } from '@/lib/site/settings';
 import { createTranslator } from '@/lib/site/translate';
@@ -39,7 +39,6 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/services
     path: `/services/${slug}`,
     title: category.seo.title ?? category.title,
     description: category.seo.description ?? category.excerpt,
-    image: category.cover?.conversions?.lg ?? category.cover?.url, // → settings.og_image fallback
   });
 }
 
@@ -209,7 +208,7 @@ export default async function CategoryPage({ params }: PageProps<'/[locale]/serv
         />
       )}
 
-      <JsonLd data={serviceJsonLd(category, site, locale)} />
+      <JsonLd data={serviceJsonLd(category, site, locale, await alternateSiteName(locale))} />
     </>
   );
 }

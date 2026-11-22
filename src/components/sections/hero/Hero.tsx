@@ -1,7 +1,6 @@
 import { ArrowRight, Play } from 'lucide-react';
 import { buttonClasses } from '@/components/ui/Button';
 import { CtaLink } from '@/components/ui/CtaLink';
-import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 import type { HeroSection, SiteSettings } from '@/lib/api/types';
 import { settingValue } from '@/lib/site/settings';
@@ -20,14 +19,18 @@ interface HeroProps {
 const secondaryClass = buttonClasses('ghost', 'border border-border px-5 backdrop-blur-sm hover:border-primary');
 
 /**
- * Home hero: H1 + CMS subtitle + two CTAs (primary "Start a project", secondary "Watch the reel"
- * when a showreel exists, otherwise "Explore our services"). All copy is server-rendered
- * (readable without JS — this is the LCP); the 3D scene / video / poster is decided on the
- * client by SceneGate. No eyebrow and no stat chips: the hero stays calm.
+ * Home hero: H1 = the tagline setting (the hero has no title of its own: one place to edit),
+ * CMS subtitle, CMS button 1 (default "Start a project" → /contact) and button 2 (default
+ * "Explore our services" → /services), plus a separate "Watch the reel" button (play icon,
+ * ui string label) that appears automatically when Settings → showreel link is set.
+ * All copy is server-rendered (readable without JS — this is the LCP); the 3D scene / video /
+ * poster is decided on the client by SceneGate. No eyebrow and no stat chips: the hero stays calm.
  */
 export function Hero({ hero, settings, t }: HeroProps) {
   const showreel = settingValue(settings.showreel_url);
-  const title = hero.title ?? settings.tagline;
+  const title = settings.tagline;
+  const primary = hero.cta ?? { label: t('actions.start_project'), url: '/contact' };
+  const secondary = hero.cta2 ?? { label: t('actions.explore_services'), url: '/services' };
 
   return (
     <HeroStage media={hero.media}>
@@ -48,25 +51,23 @@ export function Hero({ hero, settings, t }: HeroProps) {
             {hero.subtitle && <p className="mt-6 max-w-[34rem] text-lead text-pretty text-muted">{hero.subtitle}</p>}
 
             <div className="mt-10 flex flex-wrap items-center gap-3">
-              <CtaLink
-                cta={hero.cta ?? { label: t('actions.start_project'), url: '/contact' }}
-                className={buttonClasses('primary', 'px-6')}
-              >
-                {hero.cta?.label ?? t('actions.start_project')}
+              <CtaLink cta={primary} className={buttonClasses('primary', 'px-6')}>
+                {primary.label}
                 <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
               </CtaLink>
 
-              {showreel && hero.cta2 ? (
-                <CtaLink cta={hero.cta2} className={cn(secondaryClass, 'ps-2')}>
+              <CtaLink cta={secondary} className={secondaryClass}>
+                {secondary.label}
+              </CtaLink>
+
+              {/* Automatic: only with a showreel link in Settings (opens ui/VideoModal via #reel). */}
+              {showreel && (
+                <a href="#reel" className={cn(secondaryClass, 'ps-2')}>
                   <span className="inline-flex size-7 items-center justify-center rounded-pill bg-primary text-on-primary">
                     <Play aria-hidden="true" className="size-3.5 translate-x-px fill-current" />
                   </span>
-                  {hero.cta2.label}
-                </CtaLink>
-              ) : (
-                <Link href="/services" className={secondaryClass}>
-                  {t('actions.explore_services')}
-                </Link>
+                  {t('actions.watch_reel')}
+                </a>
               )}
             </div>
           </div>

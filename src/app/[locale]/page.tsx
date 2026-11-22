@@ -10,18 +10,16 @@ import { StatsSection } from '@/components/sections/home/StatsSection';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { resolveLocale } from '@/i18n/locale';
 import { getHome, getSite } from '@/lib/api/endpoints';
-import type { HeroSection, HomeSection, Site, StatsSection as StatsData } from '@/lib/api/types';
+import type { HomeSection, Site, StatsSection as StatsData } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
 import { buildMetadata } from '@/lib/seo/metadata';
-import { organizationJsonLd } from '@/lib/seo/structured-data';
+import { alternateSiteName, organizationJsonLd } from '@/lib/seo/structured-data';
 import { settingValue, whatsappUrl } from '@/lib/site/settings';
 import { createTranslator, type Translate } from '@/lib/site/translate';
 
 export async function generateMetadata({ params }: PageProps<'/[locale]'>): Promise<Metadata> {
   const locale = await resolveLocale(params);
-  const { data: sections } = await getHome(locale);
-  const hero = sections.find((s): s is HeroSection => s.key === 'hero');
-  return buildMetadata({ locale, path: '/', image: hero?.image?.conversions?.lg ?? hero?.image?.url });
+  return buildMetadata({ locale, path: '/' });
 }
 
 /**
@@ -47,7 +45,7 @@ function rendersOnHome(section: HomeSection, hasAbout: boolean): boolean {
 }
 
 /** One home section, by key. Order and visibility come from GET /home. */
-function renderSection(section: HomeSection, site: Site, t: Translate, stats: StatsData['items']) {
+function renderSection(section: HomeSection, site: Site, t: Translate, stats: StatsData | undefined) {
   switch (section.key) {
     case 'hero':
       return <Hero hero={section} settings={site.settings} t={t} />;
@@ -105,7 +103,7 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   const [{ data: sections }, { data: site }] = await Promise.all([getHome(locale), getSite(locale)]);
   const t = createTranslator(site.ui_strings);
   // Visible stats section → its numbers show inside About.
-  const stats = sections.find((s): s is StatsData => s.key === 'stats')?.items ?? [];
+  const stats = sections.find((s): s is StatsData => s.key === 'stats');
   const hasAbout = sections.some((s) => s.key === 'about');
   const visible = sections.filter((s) => rendersOnHome(s, hasAbout));
 
@@ -128,7 +126,7 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
           </div>
         );
       })}
-      <JsonLd data={organizationJsonLd(site, locale)} />
+      <JsonLd data={organizationJsonLd(site, locale, await alternateSiteName(locale))} />
     </>
   );
 }

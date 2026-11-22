@@ -111,8 +111,15 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Process: `ProcessLine` measures the `[data-marker]` centres and positions the track/line (horizontal or vertical);
   progress (one row) runs from section top at 75% of the viewport to section centre at 50%; vertical timeline: the
   line tip follows 60% of the viewport.
-- Brand name in CMS copy: `withSiteName(text, site.settings.site_name)` (`lib/site/brand.ts`) swaps the Latin "Pixellap"
-  for the localized site name once the API serves one (About eyebrow/title).
+- Brand name: `settings.site_name` is localized ("Pixellap" / "بكسل لاب") — use it everywhere (title suffix via
+  `withSiteSuffix`, OG site_name, JSON-LD `name` + `alternateName` from `alternateSiteName(locale)`, footer, WhatsApp chat).
+  `withSiteName(text, siteName)` (`lib/site/brand.ts`) still swaps a Latin "Pixellap" left in CMS copy.
+- Hero: H1 = `settings.tagline` (the hero has no title); CMS buttons 1 + 2 (defaults Start a project → /contact,
+  Explore our services → /services); the "Watch the reel" button is separate and automatic when `showreel_url` is set.
+  The services link label comes from the services section `cta` (fallback ui string `actions.view_all_services`).
+- Share previews: `buildMetadata` always uses the site sharing image (Settings → SEO, else `public/og-default.jpg`,
+  1200×630 JPG) with width/height/alt/type; og:locale `en_US` / `ar_AE` + alternate; twitter summary_large_image.
+  Pre-launch, link-preview bots pass the basic auth (API runbook §13).
 - Home renders `/home` sections in API order (`app/[locale]/page.tsx` → `renderSection`). The stats render inside the
   About section (`AboutTeaser`: a full-width strip of 4 tiles under the image | text columns); the standalone `StatsSection` only shows on home when About is hidden (and on /about).
   Sections live in `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `PageHero`, `ui/CtaLink`.

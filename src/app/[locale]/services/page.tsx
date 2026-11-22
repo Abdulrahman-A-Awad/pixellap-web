@@ -19,7 +19,6 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/services
     path: '/services',
     title: page.seo.title,
     description: page.seo.description,
-    image: page.hero?.conversions?.lg ?? page.hero?.url,
   });
 }
 

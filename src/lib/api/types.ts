@@ -79,7 +79,9 @@ export interface Faq {
 /* ────────────────────────────────── /site ─────────────────────────────────── */
 
 export interface SiteSettings {
+  /** Localized brand name ("Pixellap" / "بكسل لاب"): <title>, OG site_name, JSON-LD, footer, WhatsApp chat. */
   site_name: string;
+  /** Also the home hero headline (the hero has no title of its own). */
   tagline: string;
   /** YouTube, Vimeo or direct .mp4 URL; "" when not set. */
   showreel_url: string;
@@ -95,12 +97,14 @@ export interface SiteSettings {
   response_time: string;
   /** Profile URLs; "" when not set. */
   socials: {
+    facebook: string;
     instagram: string;
     linkedin: string;
     tiktok: string;
     youtube: string;
     x: string;
     behance: string;
+    snapchat: string;
   };
   seo_default_title: string;
   seo_default_description: string;
@@ -188,6 +192,11 @@ export interface HeroMedia {
   vertical: HeroLoopVideo;
 }
 
+/**
+ * Hero: `eyebrow` and `title` are always null (the H1 is `settings.tagline`). `cta2` is a normal
+ * link (default "Explore our services" → /services); the reel button is separate and automatic
+ * (shown when `settings.showreel_url` is set, label = ui string `actions.watch_reel`).
+ */
 export interface HeroSection extends HomeSectionBase<'hero'> {
   media: HeroMedia;
 }

@@ -18,7 +18,6 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/about'>)
     path: '/about',
     title: page.seo.title,
     description: page.seo.description,
-    image: page.hero?.conversions?.lg ?? page.hero?.url,
   });
 }
 

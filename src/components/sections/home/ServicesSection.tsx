@@ -8,7 +8,9 @@ import { StackingCards } from './StackingCards';
 
 export function ServicesSection({ section, t }: { section: ServicesData; t: Translate }) {
   if (section.categories.length === 0) return null;
+  // CMS link next to the heading (admin: Home Page → Our services); defaults when left empty.
   const allHref = section.cta?.url?.startsWith('/') ? section.cta.url : '/services';
+  const allLabel = section.cta?.label || t('actions.view_all_services');
 
   return (
     <section id="services" aria-labelledby="services-title" className="relative section-y">
@@ -23,7 +25,7 @@ export function ServicesSection({ section, t }: { section: ServicesData; t: Tran
               href={allHref}
               className="group inline-flex min-h-11 items-center gap-2 font-bold text-link underline-offset-4 hover:underline"
             >
-              {t('actions.view_all_services')}
+              {allLabel}
               <ArrowRight
                 aria-hidden="true"
                 className="size-4 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1"
