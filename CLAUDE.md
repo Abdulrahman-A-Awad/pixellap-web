@@ -81,7 +81,7 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 ## Sections & motion conventions
 
 - **Type scale = utilities only** (globals.css, fluid): `text-display` (home hero H1) · `text-page-title` (inner-page H1;
-  a category title must fit 2 lines at 1280) · `text-heading` (H2) · `text-title` (H3/cards) · `text-lead` (subtitles) ·
+  a category title must fit 2 lines at 1280) · `text-heading` (H2) · `text-card-title` (home stacking-card titles) · `text-title` (H3/cards) · `text-stat` (stat tile numerals) · `text-lead` (subtitles) ·
   `text-meta` (small). Body is 1rem / ar 1.0625rem. Paragraph width: `measure` (65ch). No one-off font sizes.
 - **Rhythm:** sections use `section-y`; the header block is always `SectionHeading` (start-aligned; `action` slot for an
   end-side link). Home alternates bands (`tone-surface` on every other content section, set in `page.tsx`); cards use
@@ -104,13 +104,18 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Cover images: `imageSource(asset)` (original file → optimizer) + `coverSizes(asset, rules)` for every `fill` +
   `object-cover` image whose box is taller than the photo — otherwise the browser gets a box-width file that is upscaled
   (soft / pixelated).
-- Stacking cards: sticky/height in `.stack-card` (top = header + 24px + i × 14px; height fits the viewport minus the
-  stack so the last card's button is always visible); GSAP only scales the previous card to 0.95 and
-  scrubs `--stack-dim` (brightness −15% dark / −7% light, in CSS).
+- Stacking cards: height is CONTENT-driven (never a viewport-based fixed height): title `text-card-title` ≤ 2 lines,
+  excerpt ≤ 2 lines (title clamped from lg only — tablets/phones are a list), tags limited to ROWS by `home/ServiceTags` (1 row when < 760px tall, else 2; "+N" for the rest),
+  button pinned with `mt-auto`; floor `min(70svh, 520px)` from lg; the copy column never clips (the photo column clips
+  itself + carries the end radii). Sticky (top = header + 24px + i × 14px) only at `(min-width:1024px) and
+  (min-height:760px)` — a 1366×768 screen with browser chrome is ~650px tall and gets a normal list. GSAP uses the same
+  query, only scales the previous card to 0.95 and scrubs `--stack-dim` (brightness −15% dark / −7% light, in CSS).
   Card photos load eagerly with the `thumb` conversion as background placeholder.
-- Process: `ProcessLine` measures the `[data-marker]` centres and positions the track/line (horizontal or vertical);
-  progress (one row) runs from section top at 75% of the viewport to section centre at 50%; vertical timeline: the
-  line tip follows 60% of the viewport.
+- Process: layout + connector are pure CSS (`.process-*`, no measuring): one `.process-seg` per step from its marker
+  centre to the next (none on the last), markers centred on the icon chip (`--chip-x` / `--marker-y`), vertical
+  timeline below lg. `home/ProcessReveal` = one-shot reveal: default = final state; below the fold → `data-process="idle"`,
+  at 30% visible → `"play"` (line draws in 1.2s, steps light up as it reaches them). Never scroll-scrubbed. The title
+  uses `SectionHeading wide` (one line from 1280).
 - Brand name: `settings.site_name` is localized ("Pixellap" / "بكسل لاب") — use it everywhere (title suffix via
   `withSiteSuffix`, OG site_name, JSON-LD `name` + `alternateName` from `alternateSiteName(locale)`, footer, WhatsApp chat).
   `withSiteName(text, siteName)` (`lib/site/brand.ts`) still swaps a Latin "Pixellap" left in CMS copy.
@@ -135,9 +140,11 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   idle (`StackingCards`, `HeroStage`, `SmoothScroll`). Never import gsap/motion statically in always-loaded code.
 - Fonts: brand font RH-Zak (Arabic + Latin, `next/font/local`): Regular 400 + Bold 700 preloaded — use `font-normal` /
   `font-bold`. Thin 100 is a separate, non-preloaded face for large display text only (`font-display-thin`, ≥ 2.5rem).
-  RH-Zak has no "·", "…", arrows or tabular figures: never put "·" in copy/UI; counters use `digits-fixed` (+ `--len`).
+  RH-Zak has no "·", "…", arrows or tabular figures: never put "·" in copy/UI; `.stat-count` overlays the CSS counter
+  end-aligned on the invisible final number, so the box keeps its final width (no jiggle, suffix attached).
   No letter-spacing in Arabic (forced to 0 globally).
-- Numbers inside RTL text: wrap in `<bdi dir="ltr">`. Pixel numerals: `brand/PixelDigits`.
+- Numbers inside RTL text: wrap in `<bdi dir="ltr">`. Stats read "120+" in both languages (prefix/suffix inside the bdi,
+  `.stat-affix` = accent, 0.72em, no gap). About stat tiles: chip + label row, number below, subgrid rows so numbers align. Pixel numerals: `brand/PixelDigits`.
 - Page transitions: `motion/PageTransition` (CSS pixel grid, same-locale internal links only, focus → `<main>`).
 - Prefer zero-JS patterns: FAQ = native `<details name="faq-{scope}">` (`home/FaqSection`, reused on category pages);
   stat counters = CSS `@property --n` + `.stat-count`, triggered by the tiny `home/StatCount` island (`data-count` in React state).

@@ -6,7 +6,8 @@ import { useIdleAfterLoad } from '@/lib/hooks/useExternal';
 /**
  * Desktop stacking effect: as the next card arrives, the previous one scales to 0.95 and dims by at
  * most 15% in dark / 7% in light (a CSS var, so a white card never turns grey). Sticky offsets / heights: globals.css .stack-card.
- * GSAP ScrollTrigger (scrub) is loaded after idle; mobile / reduced motion get a plain list.
+ * GSAP ScrollTrigger (scrub) is loaded after idle. Same query as the sticky CSS (lg AND ≥ 760px tall):
+ * shorter laptops, tablets, phones and reduced motion get a plain list.
  */
 export function StackingCards({ children }: { children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
@@ -22,7 +23,7 @@ export function StackingCards({ children }: { children: ReactNode }) {
       if (cancelled) return;
       gsap.registerPlugin(ScrollTrigger);
       const mm = gsap.matchMedia();
-      mm.add('(min-width: 1024px) and (prefers-reduced-motion: no-preference)', () => {
+      mm.add('(min-width: 1024px) and (min-height: 760px) and (prefers-reduced-motion: no-preference)', () => {
         const cards = [...el.querySelectorAll<HTMLElement>('[data-stack-card]')];
         cards.slice(0, -1).forEach((card, i) => {
           const next = cards[i + 1];

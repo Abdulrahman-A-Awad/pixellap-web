@@ -14,7 +14,8 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
 /**
  * THE section header block (eyebrow + H2 + subtitle), used by every content section so spacing and
  * alignment are identical everywhere. Start-aligned by default; `action` (e.g. a "View all" link)
- * sits on the inline-end side from md up, under the text on phones.
+ * sits on the inline-end side from md up, under the text on phones. `wide` lifts the 42rem cap so a
+ * long title can stay on one line on laptops (the subtitle keeps its reading measure).
  */
 export function SectionHeading({
   eyebrow,
@@ -23,6 +24,7 @@ export function SectionHeading({
   id,
   align = 'start',
   action,
+  wide = false,
   className,
 }: {
   eyebrow?: string | null;
@@ -31,12 +33,19 @@ export function SectionHeading({
   id?: string;
   align?: 'start' | 'center';
   action?: ReactNode;
+  wide?: boolean;
   className?: string;
 }) {
   if (!eyebrow && !title && !subtitle) return null;
 
   const text = (
-    <div className={cn('flex max-w-2xl flex-col gap-3', align === 'center' && 'mx-auto items-center text-center')}>
+    <div
+      className={cn(
+        'flex flex-col gap-3',
+        wide ? 'max-w-full' : 'max-w-2xl',
+        align === 'center' && 'mx-auto items-center text-center',
+      )}
+    >
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
       {title && (
         <h2 id={id} className="text-heading text-balance">

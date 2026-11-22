@@ -15,8 +15,10 @@ const STAT_ICONS: PixelIconName[] = ['chart', 'people', 'clock', 'star'];
 
 /**
  * Home "About" (+ numbers): rounded image with the pixel-mark overlay | eyebrow, H2, text, link.
- * Below both columns, a full-width strip of up to 4 stat tiles (pixel icon, large bold numeral with a
- * lavender → iris fill, accent suffix, label) that reveal with the count-up — 2×2 on phones.
+ * Below both columns, a full-width strip of up to 4 equal-height stat tiles — 2×2 on phones. Each tile
+ * is one start-aligned group: icon chip + label on the top row, the large numeral (lavender → iris,
+ * accent suffix attached after it, always LTR) directly below. The tiles of a row share subgrid
+ * rows, so labels of different lengths never push the numbers out of line.
  * The stats come from the `stats` section (only when it is visible); its eyebrow / title / subtitle
  * render as a small heading above the strip.
  */
@@ -116,17 +118,21 @@ export function AboutTeaser({
                   key={`${stat.label}-${i}`}
                   data-reveal
                   style={{ '--reveal-i': i } as CSSProperties}
-                  className="stat-tile flex flex-col-reverse justify-end gap-3 rounded-[20px] border border-border bg-card p-5 sm:p-6 lg:p-7"
+                  className="stat-tile row-span-2 grid grid-rows-subgrid gap-y-2 rounded-[20px] border border-border bg-card p-5 sm:p-6"
                 >
-                  {/* column-reverse keeps <dt> before <dd> in the DOM while the icon + number show first. */}
-                  <dt className="text-meta text-muted sm:text-base">{stat.label}</dt>
-                  <dd className="flex flex-col gap-4">
-                    <PixelIcon name={STAT_ICONS[i % STAT_ICONS.length]} cell={4} className="text-link" />
-                    {/* Numbers stay LTR inside RTL text. */}
-                    <bdi
-                      dir="ltr"
-                      className="stat-number inline-flex items-baseline gap-0.5 text-[clamp(2.25rem,4.4vw,3.5rem)] leading-none font-bold"
+                  {/* Row 1 (aligned to the bottom, so it sits right above the number): chip + label. */}
+                  <dt className="flex flex-col items-start gap-2 self-end text-meta text-muted sm:flex-row sm:items-center sm:gap-2.5">
+                    <span
+                      aria-hidden="true"
+                      className="stat-chip inline-flex size-8 shrink-0 items-center justify-center rounded-[10px] text-link"
                     >
+                      <PixelIcon name={STAT_ICONS[i % STAT_ICONS.length]} cell={3} />
+                    </span>
+                    <span className="text-pretty">{stat.label}</span>
+                  </dt>
+                  <dd>
+                    {/* "120+": numeral block always LTR; suffix after it, accent, smaller, no gap. */}
+                    <bdi dir="ltr" className="stat-number inline-flex items-baseline text-stat">
                       {stat.prefix && <span className="stat-affix">{stat.prefix}</span>}
                       <StatCount value={stat.value} className="font-bold" />
                       {stat.suffix && <span className="stat-affix">{stat.suffix}</span>}

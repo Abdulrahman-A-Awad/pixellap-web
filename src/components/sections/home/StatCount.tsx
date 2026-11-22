@@ -46,9 +46,10 @@ export function StatCount({ value, className = 'font-display-thin' }: { value: n
     <span
       ref={ref}
       data-count={state}
-      // Fixed width so the count-up does not jitter. Face: thin by default (StatsSection), bold in About.
-      className={cn('stat-count digits-fixed', className)}
-      style={{ '--to': value, '--len': String(value).length } as CSSProperties}
+      // The counter overlays the final number (globals.css), so the box keeps its final width.
+      // Face: thin by default (StatsSection), bold in About.
+      className={cn('stat-count', className)}
+      style={{ '--to': value } as CSSProperties}
     >
       <span className="stat-final">{value.toLocaleString('en-US')}</span>
     </span>

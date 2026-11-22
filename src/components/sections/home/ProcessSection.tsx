@@ -4,16 +4,17 @@ import { PixelField } from '@/components/brand/PixelField';
 import { PixelIcon, type PixelIconName } from '@/components/brand/PixelIcon';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import type { ProcessSection as ProcessData } from '@/lib/api/types';
-import { ProcessLine } from './ProcessLine';
+import { ProcessReveal } from './ProcessReveal';
 
 /** Decorative step icons (brief → idea → production → launch), cycled for longer processes. */
 const ICONS: PixelIconName[] = ['search', 'idea', 'clapper', 'rocket'];
 
 /**
- * Process: cards connected by a line through each step's marker. Desktop: one row, markers above the
- * cards; phones: a vertical timeline on the inline-start side. The line is measured from the markers
- * and fills over a short scroll range; each step lights up as it is reached (ProcessLine,
- * globals.css `.process-*`). Cards: pixel icon, pixel-digit number, hover lift + gradient border.
+ * Process: equal-height cards joined by a line through each step's marker. Desktop: one row, markers
+ * on the line above the cards; phones/tablets: vertical timeline on the inline-start side.
+ * Layout and line are pure CSS (globals.css `.process-*`); ProcessReveal only triggers the one-shot
+ * sequential reveal when the steps scroll in. Card: pixel icon in a soft chip + pixel-digit number on
+ * one row, title, description.
  */
 export function ProcessSection({ section }: { section: ProcessData }) {
   if (section.steps.length === 0) return null;
@@ -28,39 +29,35 @@ export function ProcessSection({ section }: { section: ProcessData }) {
           title={section.title}
           subtitle={section.subtitle}
           id="process-title"
+          wide
         />
 
-        <ProcessLine className="relative">
+        <ProcessReveal>
           <ol
-            className="process-steps relative grid gap-5 lg:gap-6"
-            style={{ '--cols': Math.min(total, 4) } as CSSProperties}
+            className="process-steps grid"
+            style={{ '--cols': Math.min(total, 4), '--count': total } as CSSProperties}
           >
             {section.steps.map((step, i) => {
               const number = String(i + 1).padStart(2, '0');
               return (
-                <li
-                  key={`${step.title}-${i}`}
-                  data-step
-                  data-reveal
-                  style={{ '--reveal-i': i } as CSSProperties}
-                  className="process-step grid grid-cols-[18px_1fr] gap-4 lg:grid-cols-1 lg:grid-rows-[auto_1fr] lg:gap-6"
-                >
-                  <span aria-hidden="true" data-marker className="process-dot mt-8 lg:mt-0" />
-                  <div className="process-card flex h-full flex-col gap-5 rounded-[20px] border border-border bg-card p-6 lg:p-7">
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="process-icon inline-flex size-16 items-center justify-center rounded-[16px]">
-                        <PixelIcon name={ICONS[i % ICONS.length]} cell={5} gradient />
+                <li key={`${step.title}-${i}`} className="process-step" style={{ '--i': i } as CSSProperties}>
+                  <span aria-hidden="true" className="process-dot" />
+                  <span aria-hidden="true" className="process-seg" />
+                  <div className="process-card flex h-full flex-col gap-4 rounded-[20px] border border-border bg-card p-6 lg:p-7">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="process-icon inline-flex size-14 items-center justify-center rounded-[14px]">
+                        <PixelIcon name={ICONS[i % ICONS.length]} cell={4} gradient />
                       </span>
-                      <PixelDigits value={number} cell={4} className="process-num mt-1 text-muted" label={number} />
+                      <PixelDigits value={number} cell={4} className="process-num" label={number} />
                     </div>
-                    <h3 className="text-title">{step.title}</h3>
+                    <h3 className="mt-1 text-title">{step.title}</h3>
                     <p className="text-muted">{step.description}</p>
                   </div>
                 </li>
               );
             })}
           </ol>
-        </ProcessLine>
+        </ProcessReveal>
       </div>
     </section>
   );

@@ -51,7 +51,7 @@ export function StatsSection({
               <dt className="text-meta text-muted">{stat.label}</dt>
               <dd className="text-[clamp(2.5rem,4vw,3.5rem)] leading-none">
                 {/* Numbers stay LTR inside RTL text. */}
-                <bdi dir="ltr" className="inline-flex items-baseline gap-0.5">
+                <bdi dir="ltr" className="inline-flex items-baseline">
                   {stat.prefix && <span className="font-display-thin text-link">{stat.prefix}</span>}
                   {/* CSS count-up (globals.css .stat-count): the real number stays in the DOM. */}
                   <StatCount value={stat.value} />
