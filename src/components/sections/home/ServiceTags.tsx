@@ -2,18 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-/** Rows of tags allowed: 1 on short viewports (< 760px tall), 2 otherwise. */
-const SHORT = '(max-height: 759px)';
-
 /**
- * Service tags limited to a number of ROWS (not a fixed count), with a "+N" pill for the rest — so a
+ * Service tags limited to a number of ROWS (default ONE; not a fixed count), with a "+N" pill for the rest — so a
  * card never grows past its budget whatever the tag lengths, language or column width.
  *
  * The server renders the first `initial` tags (+N). After hydration the tag widths are measured once
  * in an invisible probe list (all tags + the widest "+N"), and a greedy flex-wrap simulation picks
  * how many fit in the allowed rows with the pill; recomputed on resize. Only React state changes.
  */
-export function ServiceTags({ tags, initial = 4 }: { tags: string[]; initial?: number }) {
+export function ServiceTags({ tags, rows = 1, initial = 2 }: { tags: string[]; rows?: number; initial?: number }) {
   const listRef = useRef<HTMLUListElement>(null);
   const probeRef = useRef<HTMLUListElement>(null);
   const [visible, setVisible] = useState(Math.min(initial, tags.length));
@@ -22,10 +19,8 @@ export function ServiceTags({ tags, initial = 4 }: { tags: string[]; initial?: n
     const list = listRef.current;
     const probe = probeRef.current;
     if (!list || !probe) return;
-    const mq = window.matchMedia(SHORT);
 
     const fit = () => {
-      const rows = mq.matches ? 1 : 2;
       const width = list.clientWidth;
       if (!width) return;
       const gap = parseFloat(getComputedStyle(list).columnGap) || 0;
@@ -44,19 +39,18 @@ export function ServiceTags({ tags, initial = 4 }: { tags: string[]; initial?: n
       };
       let k = tags.length;
       while (k > 0 && !fits(k)) k -= 1;
-      setVisible(k);
+      // Never only "+N": the first tag always shows (truncated with an ellipsis next to the pill).
+      setVisible(Math.max(k, Math.min(1, tags.length)));
     };
 
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(list);
-    mq.addEventListener('change', fit);
     void document.fonts?.ready.then(fit);
     return () => {
       observer.disconnect();
-      mq.removeEventListener('change', fit);
     };
-  }, [tags.length]);
+  }, [tags.length, rows]);
 
   if (tags.length === 0) return null;
   const more = tags.length - visible;
@@ -65,14 +59,15 @@ export function ServiceTags({ tags, initial = 4 }: { tags: string[]; initial?: n
 
   return (
     <div className="relative">
-      <ul ref={listRef} className="flex flex-wrap gap-2">
+      {/* One row: no wrapping; a tag that is wider than the row shrinks and truncates. */}
+      <ul ref={listRef} className={rows === 1 ? 'flex gap-2' : 'flex flex-wrap gap-2'}>
         {tags.slice(0, visible).map((t) => (
-          <li key={t} className={tag}>
+          <li key={t} className={`${tag} min-w-0`}>
             {t}
           </li>
         ))}
         {more > 0 && (
-          <li className={pill}>
+          <li className={`${pill} shrink-0`}>
             <bdi dir="ltr">+{more}</bdi>
           </li>
         )}

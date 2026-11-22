@@ -8,11 +8,14 @@ const VARIANTS: Record<ButtonVariant, string> = {
   ghost: 'text-text hover:bg-surface-2',
 };
 
-/** Class string for pill buttons, usable on <button>, <a> and <Link>. */
+/**
+ * Class string for pill buttons, usable on <button>, <a> and <Link>. `btn-press` (globals.css) adds
+ * the spring press (scale 0.97) and smooth colour changes.
+ */
 export function buttonClasses(variant: ButtonVariant = 'primary', className?: string): string {
   return cn(
     'inline-flex min-h-11 items-center justify-center gap-2 rounded-pill px-5 py-2.5 text-sm font-bold',
-    'transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60',
+    'btn-press disabled:cursor-not-allowed disabled:opacity-60',
     VARIANTS[variant],
     className,
   );

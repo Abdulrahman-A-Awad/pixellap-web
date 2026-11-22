@@ -55,7 +55,9 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 
 ## Home hero (3D)
 
-- `components/sections/hero/`: `Hero` (server copy = LCP) → `HeroStage` (sticky pin, GSAP scrub → `progress` ref)
+- `components/sections/hero/`: `Hero` (server copy = LCP) → `HeroStage` (sticky pin 200svh = 100svh of scroll, GSAP
+  scrub → `progress` ref; the copy is NOT faded: it stays for the whole pin and leaves with the stage, so the pin never
+  shows an empty stage; subtitle + buttons rise in after the title via `.hero-rise`, pure CSS from opacity 0.001)
   → `SceneGate` (tier decision, poster/video/scene, pause off-screen) → `three/PixelScene` (dynamic, ssr:false).
 - Tiers (`src/lib/device.ts`): static (reduced motion / no WebGL2 → matching poster) · video (weak mobile or Save-Data,
   needs a CMS loop video) · low (32 cubes, no postfx, dpr ≤ 1.25) · high. `PerformanceMonitor` drops high→low once.
@@ -75,11 +77,33 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Desktop (motion allowed): the scene chunk is `import()`ed when `SceneGate` evaluates (parallel to hydration) and the
   scene mounts right after hydration; phones keep the idle gate. Intro = `INTRO_SECONDS` (1.2 s). Lenis lerp 0.13, touch native.
 - Budgets: 3D path ≤ 250 KB gzip (three+R3F ≈ 233 KB, scene ≈ 11 KB; postprocessing ≈ 22 KB lazy, high+dark only).
-  Nothing heavy in the initial route: the scene, GSAP, Lenis, Motion (menu / reel dialog) load after idle or on use.
-- Showreel: `ui/VideoModal` intercepts any link to `#reel` (YouTube/Vimeo privacy embeds or direct files).
+  Nothing heavy in the initial route: the scene, GSAP, Lenis load after idle; Motion reveals use `m.*` + LazyMotion
+  (features chunk on first use); menu / reel dialog load on use.
+- Showreel: `ui/VideoModal` intercepts any link to `#reel` (YouTube/Vimeo privacy embeds or direct files). `VideoDialog`:
+  `--scrim` (rgba(0,0,0,.8)) + blur in both themes, player `w-[min(92vw,calc(88svh*16/9))]` aspect 16:9 (never larger than
+  the viewport), 20px corners, spring scale-in, close button top-end (first focus), Esc, backdrop click; unmount stops it.
 
 ## Sections & motion conventions
 
+- **Motion system:** tokens in `src/lib/motion.ts` (durations fast .2 / base .45 / slow .8 s, ease-out [0.16,1,0.3,1],
+  springs soft 120/20 + snappy, stagger .06–.08, reveal variants fade-up / scale-in / blur-in / slide-start / slide-end),
+  mirrored in CSS (`--dur-*`, `--ease-out-expo`, `--ease-spring` (linear() spring), `--ease-pop`).
+  `components/motion/MotionProvider` (layout) = LazyMotion (async `domAnimation`) + `MotionConfig reducedMotion="user"`.
+- **Section reveals on home = `components/motion/Reveal`** (`variant`, `index` for stagger, `as`): the server HTML is the
+  FINAL state; after hydration only elements below 85% of the viewport are set hidden (instantly, unseen) and animate in
+  once when they pass the 85% line (IntersectionObserver, works in every browser; reduced motion = nothing). Used by
+  `SectionHeading` (eyebrow / title / subtitle / action staggered), About, stats, FAQ, clients, CTA. Inner pages still use
+  the CSS `data-reveal` (scroll-driven, progressive). Don't nest a `data-reveal` inside a `Reveal`.
+- **Glass navbar:** `layout/Header` = floating pill (`.nav-shell` / `.nav-pill`): centred, max 1200px, 12px from the top,
+  always visible (no hide-on-scroll), `--glass-bg` + `backdrop-filter: saturate(180%) blur(20px)`, hairline
+  `--glass-border`, `--glass-shadow`; compacts after 24px (64→56 desktop, 56→52 phones, `--pill-h*`, spring easing). No
+  backdrop-filter → `--glass-solid`. `--header-h` = the space it occupies (68 / 76px), constant while it compacts.
+  `HeaderFallback` renders the same pill. Phones: `MobileMenu` = glass sheet (`.glass-sheet`) dropping from the pill.
+- **Surfaces:** `.surface-card` (24px, `corner-shape: squircle` where supported, hairline, dark = `--card-sheen` glass,
+  light = layered `--card-shadow`) for services, process, stats, FAQ, help card; `.lift` hover. Buttons: `buttonClasses`
+  includes `.btn-press` (spring scale .97). `ui/Magnetic` wraps primary CTAs (fine pointers only, ≤ 7px, own
+  `translate`). `.btn-shine` sweep (CTA band). Images: `ui/Parallax` layer (±24px, `.parallax-layer` 48px taller than its
+  clipping frame, only while visible) + `group-hover:scale-[1.03]` — remember the extra 48px in `coverSizes` box ratios.
 - **Type scale = utilities only** (globals.css, fluid): `text-display` (home hero H1) · `text-page-title` (inner-page H1;
   a category title must fit 2 lines at 1280) · `text-heading` (H2) · `text-card-title` (home stacking-card titles) · `text-title` (H3/cards) · `text-stat` (stat tile numerals) · `text-lead` (subtitles) ·
   `text-meta` (small). Body is 1rem / ar 1.0625rem. Paragraph width: `measure` (65ch). No one-off font sizes.
@@ -91,8 +115,8 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Images on cards are never under a scrim: text goes on a solid card panel (bento, rail, stacking cards).
 - Logo: `variant="horizontal"` in header (40px desktop / 32px below lg) and footer; generated from the stacked logo's paths
   (`public/brand/pixellap-logo-h*.svg`).
-- Header height = `--header-h` (64px, 76px from lg): use `h-(--header-h)` / `pt-(--header-h)` / `calc(var(--header-h) …)`,
-  never a fixed number. Desktop nav = `layout/NavLinks` (active pill measured + slid, hover underline `.nav-link` from the
+- Header height = `--header-h` (68px, 76px from lg: the floating pill + its 12px gap): use `pt-(--header-h)` /
+  `calc(var(--header-h) …)`, never a fixed number. Desktop nav = `layout/NavLinks` (active pill measured + slid, hover underline `.nav-link` from the
   reading start). `LanguageSwitch` = segmented "EN | ع" pill (dir=ltr, thumb slides on click); `ThemeToggle` = one SVG
   sun↔moon morph (`.theme-icon-*`). Below lg the header is logo + theme + menu; language, CTA and WhatsApp live in
   `MobileMenu`. The footer has no language/theme toggles.
@@ -104,18 +128,22 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Cover images: `imageSource(asset)` (original file → optimizer) + `coverSizes(asset, rules)` for every `fill` +
   `object-cover` image whose box is taller than the photo — otherwise the browser gets a box-width file that is upscaled
   (soft / pixelated).
-- Stacking cards: height is CONTENT-driven (never a viewport-based fixed height): title `text-card-title` ≤ 2 lines,
-  excerpt ≤ 2 lines (title clamped from lg only — tablets/phones are a list), tags limited to ROWS by `home/ServiceTags` (1 row when < 760px tall, else 2; "+N" for the rest),
-  button pinned with `mt-auto`; floor `min(70svh, 520px)` from lg; the copy column never clips (the photo column clips
-  itself + carries the end radii). Sticky (top = header + 24px + i × 14px) only at `(min-width:1024px) and
-  (min-height:760px)` — a 1366×768 screen with browser chrome is ~650px tall and gets a normal list. GSAP uses the same
-  query, only scales the previous card to 0.95 and scrubs `--stack-dim` (brightness −15% dark / −7% light, in CSS).
-  Card photos load eagerly with the `thumb` conversion as background placeholder.
-- Process: layout + connector are pure CSS (`.process-*`, no measuring): one `.process-seg` per step from its marker
-  centre to the next (none on the last), markers centred on the icon chip (`--chip-x` / `--marker-y`), vertical
-  timeline below lg. `home/ProcessReveal` = one-shot reveal: default = final state; below the fold → `data-process="idle"`,
-  at 30% visible → `"play"` (line draws in 1.2s, steps light up as it reaches them). Never scroll-scrubbed. The title
-  uses `SectionHeading wide` (one line from 1280).
+- Services cards (`home/StackingCards` + `ServiceCard`), two modes from one markup (`.stack-*`):
+  STACK at `(min-width:768px) and (min-height:600px)` (every laptop incl. 1366×657): sticky at header + 16px + i × 10px,
+  `min-height: min(100svh − header − 16 − (n − 1) × 10 − 24, 520px)` (the last card ends 24px above the fold; a min-height,
+  never a clipping height); copy capped (title 2 lines in stack mode only, excerpt 2 / 1 line below 700px tall, ONE row of
+  tags via `ServiceTags` + "+N", first tag always shown truncated), button pinned. GSAP: previous card scale .94 + y −12 +
+  shade (`[data-stack-shade]`, `--stack-shade`) fade-in; incoming copy fades up. CAROUSEL on phones / < 600px tall:
+  horizontal scroll-snap, one card per view with a peek, full-bleed (`--gutter`), dots. Card layout follows the CARD width
+  (container queries `@2xl:`, photo 40%). The count var is `--stack-n` — `--n` is the stat counter's registered
+  non-inheriting property. Photos load eagerly with the `thumb` conversion as background placeholder.
+- Process: geometry is pure CSS (`.process-*`: one `.process-seg` per step, marker centre → next marker centre, markers
+  on the icon chip via `--chip-x` / `--marker-y`). `home/ProcessProgress` links it to the scroll: row = progress 0 when the
+  cards row's top reaches 85% of the viewport, 1 when its bottom does (step 4 always completes while visible); vertical
+  timeline = the tip follows the 85% line per segment from the marker positions. Writes `--f{i}` per frame (only while
+  visible); `ProcessStep` reads the reached count from context → `data-active` (marker pops with `--ease-pop`, card rises).
+  Server HTML / reduced motion = all drawn + active. A glow pulse loops along completed segments (keyframes generated per
+  step count in `ProcessSection`). Title: `SectionHeading wide` (one line from 1280).
 - Brand name: `settings.site_name` is localized ("Pixellap" / "بكسل لاب") — use it everywhere (title suffix via
   `withSiteSuffix`, OG site_name, JSON-LD `name` + `alternateName` from `alternateSiteName(locale)`, footer, WhatsApp chat).
   `withSiteName(text, siteName)` (`lib/site/brand.ts`) still swaps a Latin "Pixellap" left in CMS copy.
@@ -140,13 +168,17 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   idle (`StackingCards`, `HeroStage`, `SmoothScroll`). Never import gsap/motion statically in always-loaded code.
 - Fonts: brand font RH-Zak (Arabic + Latin, `next/font/local`): Regular 400 + Bold 700 preloaded — use `font-normal` /
   `font-bold`. Thin 100 is a separate, non-preloaded face for large display text only (`font-display-thin`, ≥ 2.5rem).
-  RH-Zak has no "·", "…", arrows or tabular figures: never put "·" in copy/UI; `.stat-count` overlays the CSS counter
-  end-aligned on the invisible final number, so the box keeps its final width (no jiggle, suffix attached).
+  RH-Zak has no "·", "…", arrows or tabular figures: never put "·" in copy/UI; `.stat-count` stacks the CSS counter and
+  the final number in ONE grid cell (counter end-aligned, final `visibility: hidden`), so the box keeps its final width.
+  Both must stay in flow: the About numerals use the parent's `background-clip: text` (masks with in-flow glyphs only).
+  `StatCount` adds an sr-only copy of the value; count-up = 1.4s ease-out-cubic.
   No letter-spacing in Arabic (forced to 0 globally).
 - Numbers inside RTL text: wrap in `<bdi dir="ltr">`. Stats read "120+" in both languages (prefix/suffix inside the bdi,
   `.stat-affix` = accent, 0.72em, no gap). About stat tiles: chip + label row, number below, subgrid rows so numbers align. Pixel numerals: `brand/PixelDigits`.
 - Page transitions: `motion/PageTransition` (CSS pixel grid, same-locale internal links only, focus → `<main>`).
-- Prefer zero-JS patterns: FAQ = native `<details name="faq-{scope}">` (`home/FaqSection`, reused on category pages);
+- FAQ = `home/FaqList` (client, exclusive disclosure accordion: grid-rows 0fr→1fr height animation in every browser,
+  `visibility` after close, open card highlighted, + → ×), inside `home/FaqSection` (reused on category pages).
+- Prefer zero-JS patterns:
   stat counters = CSS `@property --n` + `.stat-count`, triggered by the tiny `home/StatCount` island (`data-count` in React state).
 - Plurals: `plural(t, locale, 'services.count', n)` (`lib/site/format.ts`) picks `{base}_{Intl.PluralRules category}`
   — Arabic needs zero/one/two/few/many/other keys in the seeder. `interpolate()` fills `{placeholders}`.

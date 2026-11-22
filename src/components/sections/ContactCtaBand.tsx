@@ -1,6 +1,8 @@
 import { ArrowRight, Clock, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
+import { Reveal } from '@/components/motion/Reveal';
 import { buttonClasses } from '@/components/ui/Button';
+import { Magnetic } from '@/components/ui/Magnetic';
 import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 
@@ -8,7 +10,9 @@ import { cn } from '@/lib/cn';
  * Closing call-to-action band (home, about, services, category pages and `cta` page blocks).
  * Brand gradient royal → iris in both themes, the large white pixel mark bleeding off the
  * inline-end edge at low opacity; H2 + one line + response-time chip, then two buttons.
- * No outer glow; tight spacing so it sits close to the footer.
+ * No outer glow; tight spacing so it sits close to the footer. Motion: scale-in reveal, a very slow
+ * drifting pixel pattern behind (CSS transform, `.cta-pixels`), magnetic + shine sweep on the primary
+ * button.
  */
 export function ContactCtaBand({
   title,
@@ -43,10 +47,11 @@ export function ContactCtaBand({
       className={cn('py-[clamp(40px,5vw,72px)]', className)}
     >
       <div className="container-page">
-        <div
-          data-reveal
+        <Reveal
+          variant="scale-in"
           className="relative isolate overflow-clip rounded-[28px] bg-linear-to-br from-royal to-iris px-6 py-12 text-on-primary md:px-12 md:py-16 lg:px-16"
         >
+          <div aria-hidden="true" className="cta-pixels" />
           {/* Large pixel mark, low opacity, bleeding off the inline-end edge. */}
           <Image
             src="/brand/pixellap-mark-white.svg"
@@ -75,13 +80,18 @@ export function ContactCtaBand({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Link
-                href={ctaHref}
-                className={buttonClasses('primary', 'bg-on-primary px-6 text-royal shadow-none hover:bg-pearl')}
-              >
-                {ctaLabel}
-                <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
-              </Link>
+              <Magnetic>
+                <Link
+                  href={ctaHref}
+                  className={buttonClasses(
+                    'primary',
+                    'btn-shine bg-on-primary px-6 text-royal shadow-none hover:bg-pearl',
+                  )}
+                >
+                  {ctaLabel}
+                  <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
+                </Link>
+              </Magnetic>
               {whatsappUrl && (
                 <a
                   href={whatsappUrl}
@@ -98,7 +108,7 @@ export function ContactCtaBand({
               )}
             </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

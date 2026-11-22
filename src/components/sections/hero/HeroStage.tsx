@@ -13,9 +13,11 @@ interface HeroStageProps {
 }
 
 /**
- * Pinned hero (desktop, motion allowed): the section is 100svh + 150svh of scroll; the inner
+ * Pinned hero (desktop, motion allowed): the section is 100svh + 100svh of scroll (short enough that
+ * the scene transition fills the whole range — no empty stage before the next section); the inner
  * stage is `position: sticky` (no pin-spacer, plays well with Lenis). One scrubbed ScrollTrigger
- * writes `progress` (0→1) for the scene and hands the copy over to the next section at 0.85–1.
+ * writes `progress` (0→1) for the scene. The copy stays on the stage for the whole pin and leaves
+ * with it, so the pinned range always shows copy + scene (never an empty stage).
  * Mobile: scene (60svh) above the copy, normal flow; progress still follows the scroll.
  */
 export function HeroStage({ media, children }: HeroStageProps) {
@@ -36,7 +38,6 @@ export function HeroStage({ media, children }: HeroStageProps) {
       if (cancelled) return;
       gsap.registerPlugin(ScrollTrigger);
       const proxy = { p: 0 };
-      const copy = el.querySelector('[data-hero-copy]');
       const mm = gsap.matchMedia();
 
       mm.add(
@@ -56,10 +57,6 @@ export function HeroStage({ media, children }: HeroStageProps) {
             },
           });
           tl.to(proxy, { p: 1, duration: 1, onUpdate: () => void (progress.current = proxy.p) }, 0);
-          if (pinned && copy) {
-            // Hand the copy over to the next section.
-            tl.to(copy, { autoAlpha: 0, y: -48, duration: 0.15, ease: 'power1.in' }, 0.85);
-          }
         },
       );
       revert = () => mm.revert();
@@ -89,7 +86,7 @@ export function HeroStage({ media, children }: HeroStageProps) {
   }, []);
 
   return (
-    <section ref={section} aria-labelledby={HERO_TITLE_ID} className="relative lg:motion-safe:h-[250svh]">
+    <section ref={section} aria-labelledby={HERO_TITLE_ID} className="relative lg:motion-safe:h-[200svh]">
       <div data-hero-stage className="relative isolate lg:sticky lg:top-0 lg:h-svh lg:min-h-[40rem] lg:overflow-hidden">
         <SceneGate
           media={media}

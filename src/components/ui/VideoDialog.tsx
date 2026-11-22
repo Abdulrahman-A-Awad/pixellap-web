@@ -5,11 +5,17 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { useId, useRef } from 'react';
 import { useSite } from '@/components/providers/SiteProvider';
 import { useDialog } from '@/lib/a11y/useDialog';
+import { ease, spring } from '@/lib/motion';
 import type { VideoSource } from '@/lib/video';
 
 /**
- * The showreel dialog itself (Motion + focus trap). Loaded lazily by VideoModal on first open.
- * The player mounts only while open, so closing stops playback.
+ * Showreel dialog (Motion + focus trap), loaded lazily by VideoModal on first open.
+ * - Dark scrim (--scrim, rgba(0,0,0,.8)) + blur in BOTH themes.
+ * - Player: 16:9, width = min(92vw, 88svh × 16/9) → never wider or taller than the viewport,
+ *   centred, 20px corners; scales in with a soft spring.
+ * - Close: large button at the top-end corner of the screen, Esc (useDialog), backdrop click.
+ * - YouTube via youtube-nocookie with autoplay (lib/video). The player mounts only while open, so
+ *   closing stops playback.
  */
 export default function VideoDialog({
   source,
@@ -36,58 +42,51 @@ export default function VideoDialog({
             aria-modal="true"
             aria-labelledby={titleId}
             data-lenis-prevent
-            className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-8"
+            className="fixed inset-0 z-[70] grid place-items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.3, ease: ease.out }}
           >
-            {/* Backdrop closes the modal. */}
+            <h2 id={titleId} className="sr-only">
+              {t('actions.watch_reel')}
+            </h2>
+
+            {/* Backdrop: dark in both themes; click closes (not focusable: Esc / close button for keyboards). */}
+            <div aria-hidden="true" onClick={close} className="absolute inset-0 bg-(--scrim) backdrop-blur-md" />
+
+            {/* Close: first in focus order, top-end of the screen, 48px hit area, above the player. */}
             <button
               type="button"
-              tabIndex={-1}
-              aria-hidden="true"
               onClick={close}
-              className="absolute inset-0 cursor-default bg-bg/85 backdrop-blur-md"
-            />
+              className="btn-press absolute end-3 top-3 z-10 inline-flex size-12 items-center justify-center rounded-pill bg-on-primary/12 text-on-primary ring-1 ring-on-primary/15 backdrop-blur-md transition-colors hover:bg-on-primary/22 sm:end-5 sm:top-5"
+            >
+              <X aria-hidden="true" className="size-6" />
+              <span className="sr-only">{t('misc.close')}</span>
+            </button>
 
             <motion.div
-              className="relative w-full max-w-6xl"
-              initial={{ scale: 0.96, y: 12 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.98, y: 8 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              data-reel-player
+              className="relative aspect-video w-[min(92vw,calc(88svh*16/9))] overflow-hidden rounded-[20px] bg-ink shadow-2xl ring-1 ring-on-primary/10"
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0, transition: { duration: 0.2 } }}
+              transition={spring.soft}
             >
-              <div className="mb-3 flex items-center justify-between gap-4">
-                <h2 id={titleId} className="text-lg font-bold">
-                  {t('actions.watch_reel')}
-                </h2>
-                <button
-                  type="button"
-                  onClick={close}
-                  className="inline-flex size-11 items-center justify-center rounded-pill bg-surface-2 text-text transition-colors hover:bg-primary hover:text-on-primary"
-                >
-                  <X aria-hidden="true" className="size-5" />
-                  <span className="sr-only">{t('misc.close')}</span>
-                </button>
-              </div>
-
-              <div className="aspect-video w-full overflow-hidden rounded-card border border-border bg-ink shadow-2xl">
-                {source.kind === 'iframe' ? (
-                  <iframe
-                    src={source.src}
-                    title={t('actions.watch_reel')}
-                    className="size-full"
-                    allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-                    allowFullScreen
-                    referrerPolicy="strict-origin-when-cross-origin"
-                  />
-                ) : (
-                  <video className="size-full" controls autoPlay playsInline preload="auto">
-                    <source src={source.src} type={source.type} />
-                  </video>
-                )}
-              </div>
+              {source.kind === 'iframe' ? (
+                <iframe
+                  src={source.src}
+                  title={t('actions.watch_reel')}
+                  className="size-full"
+                  allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              ) : (
+                <video className="size-full" controls autoPlay playsInline preload="auto">
+                  <source src={source.src} type={source.type} />
+                </video>
+              )}
             </motion.div>
           </motion.div>
         )}

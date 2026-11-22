@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'react';
 import { PixelField } from '@/components/brand/PixelField';
+import { Reveal } from '@/components/motion/Reveal';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import type { HomeStat } from '@/lib/api/types';
 import { cn } from '@/lib/cn';
@@ -35,10 +35,9 @@ export function StatsSection({
           )}
         >
           {items.map((stat, i) => (
-            <div
+            <Reveal
               key={`${stat.label}-${i}`}
-              data-reveal
-              style={{ '--reveal-i': i } as CSSProperties}
+              index={i}
               className={cn(
                 // column-reverse keeps <dt> before <dd> in the DOM; justify-end aligns every number to the top.
                 'flex flex-col-reverse justify-end gap-3 px-4 py-8 md:px-8 md:py-10',
@@ -58,7 +57,7 @@ export function StatsSection({
                   {stat.suffix && <span className="font-display-thin text-link">{stat.suffix}</span>}
                 </bdi>
               </dd>
-            </div>
+            </Reveal>
           ))}
         </dl>
       </div>

@@ -15,6 +15,21 @@
   /* Third-party brand (floating WhatsApp button). */
   --whatsapp: #25d366;
   --on-whatsapp: #05310f;
+
+  /* Motion system (mirrors src/lib/motion.ts). */
+  --dur-fast: 0.2s;
+  --dur-base: 0.45s;
+  --dur-slow: 0.8s;
+  /* Soft spring (≈ stiffness 120 / damping 20): ~2% overshoot, settles quickly. */
+  --ease-spring: linear(0, 0.06, 0.24 9%, 0.5 16%, 0.78 26%, 0.94 36%, 1.01 46%, 1.02 55%, 1.005 70%, 1);
+  /* Pop (markers, icons): a visible overshoot for small elements only. */
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Page gutter (same clamp as .container-page), for full-bleed scrollers. */
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+  /* Modal scrim: dark in both themes. */
+  --scrim: rgba(0, 0, 0, 0.8);
+  /* Shine sweep on light-on-colour buttons. */
+  --shine: rgba(255, 255, 255, 0.55);
 }
 
 /* Dark (default) */
@@ -39,6 +54,17 @@
   --pixel-opacity: 0.35;
   /* Card fill: --surface on --bg sections, --bg on surface sections (.tone-surface). */
   --card: var(--surface);
+  /* Glass (navbar, menu sheet). */
+  --glass-bg: rgba(14, 9, 32, 0.55);
+  --glass-solid: rgba(14, 9, 32, 0.94);
+  --glass-border: rgba(244, 242, 255, 0.1);
+  --glass-shadow: 0 10px 40px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* Apple-style surfaces: glassy in dark (top highlight + faint sheen), deep soft shadow. */
+  --card-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 40%);
+  --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 30px 60px -40px rgba(0, 0, 0, 0.8);
+  --card-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 30px 60px -32px rgba(129, 82, 248, 0.35);
+  /* Previous stacking card darkens a little as the next one covers it. */
+  --stack-shade: rgba(0, 0, 0, 0.42);
 }
 
 .light {
@@ -58,6 +84,17 @@
   --warning: #8a4b00;
   --pixel-opacity: 0.2;
   --card: var(--surface);
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-solid: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(11, 6, 32, 0.08);
+  --glass-shadow: 0 10px 34px -14px rgba(58, 17, 158, 0.22), 0 1px 2px rgba(11, 6, 32, 0.05);
+  /* Light: layered, very soft shadows; hairline border; no sheen. */
+  --card-sheen: linear-gradient(transparent, transparent);
+  --card-shadow:
+    0 1px 2px rgba(11, 6, 32, 0.04), 0 8px 24px -14px rgba(58, 17, 158, 0.12), 0 32px 64px -44px rgba(58, 17, 158, 0.22);
+  --card-shadow-hover:
+    0 1px 2px rgba(11, 6, 32, 0.05), 0 14px 32px -14px rgba(58, 17, 158, 0.18), 0 40px 80px -40px rgba(58, 17, 158, 0.3);
+  --stack-shade: rgba(11, 6, 32, 0.1);
 }
 
 /* Alternate section background (home rhythm): cards inside switch to --bg so they still read. */
@@ -361,6 +398,18 @@ html.lenis body {
     animation-delay: calc(var(--i, 0) * 40ms);
   }
 }
+/* The section right after the hero starts closer (the stage already ends with open space). */
+[data-section='hero'] + [data-section] > .section-y {
+  padding-top: clamp(40px, 5vw, 72px);
+}
+
+/* Hero subtitle + buttons: rise in after the title words (same LCP-safe start at opacity 0.001). */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-rise {
+    animation: word-in var(--dur-slow) var(--ease-out-expo) both;
+    animation-delay: calc(280ms + var(--rise-i, 0) * 90ms);
+  }
+}
 @keyframes word-in {
   from {
     opacity: 0.001;
@@ -566,6 +615,49 @@ html.lenis body {
   }
 }
 
+/*
+ * JS-triggered reveal (components/motion/Reveal, home): no attribute = final state (server HTML, no JS,
+ * reduced motion). "hidden" is applied off screen without a transition; "shown" transitions with the
+ * motion tokens. transform/filter only (hover lifts use `translate`, so they never conflict); the
+ * shown-state transition list keeps the hover transitions of cards working.
+ */
+[data-reveal-state='hidden'] {
+  opacity: 0;
+  transition: none;
+}
+[data-reveal-state='hidden'][data-reveal-variant='fade-up'] {
+  transform: translateY(24px);
+}
+[data-reveal-state='hidden'][data-reveal-variant='scale-in'] {
+  transform: scale(0.96);
+}
+[data-reveal-state='hidden'][data-reveal-variant='blur-in'] {
+  transform: translateY(12px);
+  filter: blur(8px);
+}
+[data-reveal-state='hidden'][data-reveal-variant='slide-start'] {
+  transform: translateX(-32px);
+}
+[data-reveal-state='hidden'][data-reveal-variant='slide-end'] {
+  transform: translateX(32px);
+}
+[dir='rtl'] [data-reveal-state='hidden'][data-reveal-variant='slide-start'] {
+  transform: translateX(32px);
+}
+[dir='rtl'] [data-reveal-state='hidden'][data-reveal-variant='slide-end'] {
+  transform: translateX(-32px);
+}
+[data-reveal-state='shown'] {
+  --reveal-delay: calc(var(--reveal-index, 0) * 80ms);
+  transition:
+    opacity var(--dur-slow) var(--ease-out-expo) var(--reveal-delay),
+    transform var(--dur-slow) var(--ease-out-expo) var(--reveal-delay),
+    filter var(--dur-slow) var(--ease-out-expo) var(--reveal-delay),
+    translate var(--dur-base) var(--ease-spring),
+    box-shadow var(--dur-base) ease,
+    border-color var(--dur-base) ease;
+}
+
 /* ───────────────────────────── Stats count-up (pure CSS) ───────────────────────────── */
 
 /*
@@ -579,9 +671,14 @@ html.lenis body {
   inherits: false;
   initial-value: 0;
 }
+/*
+ * The final number and the counter share ONE grid cell: the box keeps the final width (no jiggle,
+ * suffix attached), the counter is end-aligned, and both stay in flow — required because the About
+ * numerals are painted by the parent's background-clip: text, which masks with in-flow descendants'
+ * glyphs (an absolutely positioned counter would be invisible; an opacity-0 number would still show).
+ */
 .stat-count {
-  position: relative;
-  display: inline-block;
+  display: inline-grid;
 }
 @media (prefers-reduced-motion: no-preference) {
   .stat-count[data-count] {
@@ -590,67 +687,84 @@ html.lenis body {
   }
   .stat-count[data-count='run'] {
     --n: var(--to);
-    transition: --n 1.4s var(--ease-out-expo);
+    /* ease-out-cubic: the digits visibly count (expo would jump to ~90% in the first 150ms). */
+    transition: --n 1.4s cubic-bezier(0.33, 1, 0.68, 1);
   }
-  /* The counter is overlaid end-aligned on the final number, which keeps the box at its final width
-     (no jiggle, suffix attached with no gap) and stays announced (opacity, not hidden). */
   .stat-count[data-count]::after {
     content: counter(n);
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
+    grid-area: 1 / 1;
+    justify-self: end;
   }
+  /* Keeps its width, paints nothing (not part of the text mask). Screen readers use the sr-only copy. */
   .stat-count[data-count] > .stat-final {
-    opacity: 0;
+    grid-area: 1 / 1;
+    visibility: hidden;
   }
 }
 
 /* ───────────────────────────── FAQ (<details>) ───────────────────────────── */
 
-/* Smooth open/close where ::details-content + interpolate-size exist; instant elsewhere. */
-@supports (interpolate-size: allow-keywords) {
-  .faq-item {
-    interpolate-size: allow-keywords;
-  }
-  .faq-item::details-content {
-    block-size: 0;
-    overflow: clip;
-    transition:
-      block-size 0.3s var(--ease-out-expo),
-      content-visibility 0.3s allow-discrete;
-  }
-  .faq-item[open]::details-content {
-    block-size: auto;
-  }
+/*
+ * Accordion (FaqList, disclosure pattern): the panel animates grid-template-rows 0fr -> 1fr (every
+ * browser, any content height); visibility flips after the close transition so closed answers are
+ * skipped by Tab / screen readers. The open card gets a lavender border; the + rotates to x.
+ */
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--dur-base) var(--ease-out-expo),
+    visibility 0s linear var(--dur-base);
 }
-@media (prefers-reduced-motion: reduce) {
-  .faq-item::details-content {
-    transition: none;
-  }
+.faq-panel > div {
+  min-height: 0;
+  overflow: hidden;
+}
+[data-open] > .faq-panel {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--dur-base) var(--ease-out-expo),
+    visibility 0s;
+}
+.faq-icon {
+  transition:
+    transform var(--dur-base) var(--ease-spring),
+    background-color var(--dur-fast),
+    color var(--dur-fast),
+    border-color var(--dur-fast);
+}
+[data-open] .faq-icon {
+  transform: rotate(135deg);
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.faq-item:has(> [data-open]) {
+  border-color: color-mix(in oklab, var(--brand-lavender) 55%, transparent);
+  box-shadow: var(--card-shadow-hover);
 }
 
 /* ───────────────────────────── Process ───────────────────────────── */
 
 /*
- * Each step = an 18px marker + a card, laid out in pure CSS (no measuring):
- * - phones/tablets: vertical timeline, markers in an 18px column on the inline-start side, vertically
- *   centred on the card's icon chip (--marker-y);
- * - lg: one row, markers in their own row above the cards (32px; ≥ 26px clear of the rotated marker), horizontally centred
- *   on the icon chip (--chip-x).
- * Connector = one segment per step (`.process-seg`, not on the last one) from its marker centre to the
- * next marker centre, so the line only ever runs between the first and last marker, through every
- * centre, in LTR and RTL, for any card heights.
+ * Each step = an 18px marker + a card, laid out in pure CSS (markers centred on the icon chip:
+ * --chip-x on lg, --marker-y on the vertical timeline). One .process-seg per step joins its marker
+ * centre to the next one (none on the last).
  *
- * Reveal (ProcessReveal, `data-process` on the wrapper): the DEFAULT is the final state (server HTML,
- * no JS, reduced motion, already on screen). Below the fold it is set to "idle" (segments empty,
- * steps dimmed), then "play" once 30% visible: the segments draw one after another (1.2s in total,
- * linear, so it reads as one line) and each step activates as the line reaches its marker.
+ * Scroll-linked (ProcessProgress): each segment's fill is --seg-fill (= the wrapper's --f{i}, 0..1,
+ * written per frame; 1 without JS). Row: progress 0 when the cards row's top reaches 85% of the
+ * viewport, 1 when its bottom does, so step 4 always completes while visible. Vertical timeline: the
+ * line tip follows the 85% line exactly (per segment, from the marker positions).
+ * A step gets [data-active] (React state) when the line reaches its marker: the marker pops (spring),
+ * the card rises. A soft glow pulse loops along COMPLETED segments (cycle timing per step count,
+ * inline in ProcessSection; background-position only, cheap).
  */
 .process-steps {
   --step-gap: 1.25rem;
   --marker: 18px;
-  --marker-y: 43px; /* card p-6 (24) + chip 56 / 2 − marker / 2 */
-  --seg-d: calc(1.2s / max(var(--count, 4) - 1, 1));
+  --marker-y: 43px; /* card p-6 (24) + chip 56 / 2 - marker / 2 */
   gap: var(--step-gap);
 }
 @media (min-width: 1024px) {
@@ -661,7 +775,6 @@ html.lenis body {
   }
 }
 .process-step {
-  --delay: 0s;
   position: relative;
   display: grid;
   grid-template-columns: var(--marker) minmax(0, 1fr);
@@ -683,17 +796,22 @@ html.lenis body {
   height: var(--marker);
   margin-top: var(--marker-y);
   border-radius: 4px;
-  border: 2px solid var(--primary);
+  border: 2px solid var(--border);
+  background: var(--bg);
+  transform: scale(0.7);
+  transition:
+    transform 0.6s var(--ease-pop),
+    background-color 0.3s,
+    border-color 0.3s,
+    box-shadow 0.4s;
+}
+.process-step[data-active] > .process-dot {
+  border-color: var(--primary);
   background: var(--primary);
   box-shadow:
     0 0 0 5px color-mix(in oklab, var(--primary) 18%, transparent),
     0 0 18px -2px var(--accent-glow);
-  transform: rotate(45deg);
-  transition:
-    background-color 0.4s var(--delay),
-    border-color 0.4s var(--delay),
-    box-shadow 0.4s var(--delay),
-    transform 0.5s var(--ease-out-expo) var(--delay);
+  transform: rotate(45deg) scale(1);
 }
 @media (min-width: 1024px) {
   .process-dot {
@@ -702,7 +820,7 @@ html.lenis body {
   }
 }
 
-/* Connector segment: track (border colour) + gradient fill drawn by scaling ::after. */
+/* Connector segment: track + gradient fill (::after, scaled by --seg-fill) + glow pulse (::before). */
 .process-seg {
   position: absolute;
   pointer-events: none;
@@ -721,6 +839,27 @@ html.lenis body {
   background: linear-gradient(var(--brand-lavender), var(--brand-iris));
   box-shadow: 0 0 12px var(--accent-glow);
   transform-origin: center top;
+  transform: scaleY(var(--seg-fill, 1));
+}
+.process-seg::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: -3px;
+  border-radius: 4px;
+  background: radial-gradient(
+      closest-side,
+      var(--on-primary),
+      color-mix(in oklab, var(--brand-lavender) 60%, transparent),
+      transparent
+    )
+    no-repeat;
+  background-size: 8px 56px;
+  background-position: 50% -56px;
+  /* Only once the segment is complete. */
+  opacity: clamp(0, calc((var(--seg-fill, 1) - 0.98) * 50), 1);
+  animation: process-pulse-y var(--pulse-cycle, 4s) linear infinite;
+  animation-delay: calc(var(--i, 0) * var(--pulse-step, 0.9s));
 }
 .process-step:last-child > .process-seg {
   display: none;
@@ -735,10 +874,19 @@ html.lenis body {
   .process-seg::after {
     background: linear-gradient(to right, var(--brand-lavender), var(--brand-iris));
     transform-origin: left center;
+    transform: scaleX(var(--seg-fill, 1));
   }
   [dir='rtl'] .process-seg::after {
     background: linear-gradient(to left, var(--brand-lavender), var(--brand-iris));
     transform-origin: right center;
+  }
+  .process-seg::before {
+    background-size: 56px 8px;
+    background-position: -56px 50%;
+    animation-name: process-pulse-x;
+  }
+  [dir='rtl'] .process-seg::before {
+    animation-direction: reverse;
   }
   /* More than one row: no segment from the end of a row into the void. */
   .process-step:nth-child(4n) > .process-seg {
@@ -746,93 +894,117 @@ html.lenis body {
   }
 }
 
-/* Card: same style for every step; hover lift (`translate`, so it never waits on the reveal delay)
-   + gradient border (masked pseudo-element). */
+/* Card: rises when its step is reached; hover lift via translate (independent of the rise). */
 .process-card {
   position: relative;
+  opacity: 0.45;
+  transform: translateY(16px);
   transition:
-    opacity 0.6s ease var(--delay),
-    transform 0.6s var(--ease-out-expo) var(--delay),
-    translate 0.35s var(--ease-out-expo),
-    box-shadow 0.35s ease;
+    opacity 0.6s var(--ease-out-expo),
+    transform 0.7s var(--ease-spring),
+    translate var(--dur-base) var(--ease-spring),
+    box-shadow var(--dur-base) ease;
 }
-.process-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, var(--brand-lavender), var(--brand-iris) 45%, transparent 80%);
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
+/* Server HTML / no JS / reduced motion: ProcessStep renders data-active on every step. */
+.process-step[data-active] > .process-card {
+  opacity: 1;
+  transform: none;
 }
 .process-card:hover {
   translate: 0 -4px;
-  box-shadow: 0 22px 44px -28px color-mix(in oklab, var(--accent-glow) 70%, transparent);
-}
-.process-card:hover::before {
-  opacity: 1;
+  box-shadow: var(--card-shadow-hover);
 }
 .process-icon {
-  background: color-mix(in oklab, var(--primary) 14%, transparent);
-  transition: background-color 0.4s var(--delay);
+  background: color-mix(in oklab, var(--primary) 9%, transparent);
+  transition:
+    background-color 0.4s,
+    transform var(--dur-base) var(--ease-pop);
+}
+.process-step[data-active] .process-icon {
+  background: color-mix(in oklab, var(--primary) 15%, transparent);
+}
+.process-card:hover .process-icon {
+  transform: translateY(-2px) rotate(-6deg);
 }
 .process-num {
-  color: var(--link);
-  transition: color 0.4s var(--delay);
-}
-
-/* Idle (below the fold, before the reveal): empty line, grey markers, dimmed cards. */
-[data-process='idle'] .process-seg::after {
-  transform: scaleY(0);
-}
-[data-process='idle'] .process-dot {
-  background: var(--bg);
-  border-color: var(--border);
-  box-shadow: none;
-  transform: none;
-}
-[data-process='idle'] .process-card {
-  opacity: 0.35;
-  transform: translateY(12px);
-}
-[data-process='idle'] .process-icon {
-  background: color-mix(in oklab, var(--primary) 7%, transparent);
-}
-[data-process='idle'] .process-num {
   color: var(--text-muted);
+  transition: color 0.4s;
 }
-@media (min-width: 1024px) {
-  [data-process='idle'] .process-seg::after {
-    transform: scaleX(0);
-  }
-}
-/* Play: each segment draws in its slot; each step activates when the line reaches its marker. */
-[data-process='play'] .process-step {
-  --delay: calc(var(--i, 0) * var(--seg-d));
-}
-[data-process='play'] .process-seg::after {
-  transition: transform var(--seg-d) linear var(--delay);
+.process-step[data-active] .process-num {
+  color: var(--link);
 }
 
 /* ───────────────────────────── Header ───────────────────────────── */
 
-/* Header height (sticky offsets etc. read it): 64px phones/tablets, 76px desktop. */
+/*
+ * --header-h = the space the floating pill occupies (12px gap + pill height at rest): 68px phones /
+ * tablets (56px pill), 76px desktop (64px pill). Sticky offsets and page paddings read it; it does
+ * not change when the pill compacts on scroll.
+ */
 :root {
-  --header-h: 4rem;
+  --header-h: 4.25rem;
+  --pill-h: 56px;
+  --pill-h-compact: 52px;
 }
 @media (min-width: 1024px) {
   :root {
     --header-h: 4.75rem;
+    --pill-h: 64px;
+    --pill-h-compact: 56px;
   }
 }
 
-/* First paint: the bar content fades/slides in once (the <header> itself keeps hide/show transforms). */
+/* Floating glass pill (Header / HeaderFallback): always visible, compacts with a spring. */
+.nav-shell {
+  position: fixed;
+  z-index: 40;
+  top: 12px;
+  inset-inline: 12px;
+  max-width: 1200px;
+  margin-inline: auto;
+}
+@media (min-width: 1024px) {
+  .nav-shell {
+    inset-inline: var(--gutter);
+  }
+}
+/*
+ * The blur is applied once the page scrolls (= when content actually passes under the pill): at the
+ * very top only the hero background is behind it, so the translucent fill alone looks identical, and
+ * the first paint / LCP don't pay for a backdrop blur re-rendered on every hero frame.
+ */
+.nav-pill {
+  height: var(--pill-h);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  transition:
+    height var(--dur-slow) var(--ease-spring),
+    background-color var(--dur-base) ease,
+    box-shadow var(--dur-base) ease;
+}
+[data-compact] > .nav-pill {
+  height: var(--pill-h-compact);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+/* Phones: a lighter blur (cheaper to composite on low-end GPUs); same look at that size. */
+@media (max-width: 767px) {
+  [data-compact] > .nav-pill {
+    -webkit-backdrop-filter: saturate(170%) blur(14px);
+    backdrop-filter: saturate(170%) blur(14px);
+  }
+}
+/* No backdrop-filter: a near-opaque surface so the links stay readable over anything. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav-pill,
+  .glass-sheet {
+    background: var(--glass-solid);
+  }
+}
+
+/* First paint: the pill content fades/slides in once. */
 .header-in {
   animation: header-in 0.6s var(--ease-out-expo) both;
 }
@@ -999,33 +1171,73 @@ html.lenis body {
 /* ───────────────────────────── Stacking cards (home services) ───────────────────────────── */
 
 /*
- * Card height is content-driven (the copy is capped: 2-line title / excerpt, 1–2 tag rows), with a
- * floor of min(70svh, 520px) from lg. Sticky stacking (top = header + 24px + index × 14px, a sliver of
- * every previous card) only where the whole stack fits: lg AND ≥ 760px tall — the last card's top is
- * then ≤ header + 94px and the tallest card (~510px) ends above the fold. Shorter laptops (e.g. a
- * 1366×768 screen with browser chrome ≈ 650px tall), tablets and phones: a normal list.
- * Matches the GSAP query in StackingCards. --i is set inline by ServiceCard.
+ * Two modes from ONE markup (StackingCards / ServiceCard), switched by media queries:
+ * - STACK (>= 768px wide AND >= 600px tall: every laptop incl. 1366x657): each card sticks at
+ *   header + 16px + i * 10px with a min-height of --stack-h, which makes the LAST, most offset card
+ *   end 24px above the fold: min(100svh - header - 16 - (n - 1) * 10 - 24, 520px). The copy is capped
+ *   (2-line title, <= 2-line excerpt, ONE tag row + "+N") so it always fits; a min-height, never a
+ *   clipping height. GSAP (StackingCards) scales the previous card to 0.94, lifts it 12px and fades
+ *   in its shade; the incoming card's copy fades up.
+ * - CAROUSEL (phones, or < 600px tall): a horizontal scroll-snap row, one card per view with a peek
+ *   of the next, full-bleed to the screen edges, dots below.
+ * The card's own layout follows ITS width (container queries: 2 columns 60/40 from 42rem).
  */
 .stack-card {
+  container-type: inline-size;
   position: relative;
 }
-@media (min-width: 1024px) {
-  .stack-card > [data-stack-inner] {
-    min-height: min(70svh, 520px);
-  }
+.stack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
-@media (min-width: 1024px) and (min-height: 760px) {
+.stack-dots {
+  display: none;
+}
+@media (min-width: 768px) and (min-height: 600px) {
   .stack-card {
     position: sticky;
-    top: calc(var(--header-h) + 24px + var(--i, 0) * 14px);
+    top: calc(var(--header-h) + 16px + var(--i, 0) * 10px);
+  }
+  .stack-card > [data-stack-inner] {
+    min-height: min(calc(100svh - var(--header-h) - 16px - (var(--stack-n, 6) - 1) * 10px - 24px), 520px);
   }
 }
-/* Previous card dims as the next one covers it (--stack-dim 0 → 1, scrubbed by GSAP): mild, per theme. */
-[data-stack-inner] {
-  filter: brightness(calc(1 - var(--stack-dim, 0) * 0.15));
+@media (max-width: 767px), (max-height: 599px) {
+  .stack-list {
+    flex-direction: row;
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+    padding-block: 4px 28px; /* room for the card shadow */
+  }
+  .stack-list::-webkit-scrollbar {
+    display: none;
+  }
+  .stack-card {
+    flex: 0 0 min(86%, 26rem);
+    scroll-snap-align: start;
+  }
+  .stack-card > [data-stack-inner] {
+    height: 100%;
+  }
+  .stack-dots {
+    display: flex;
+  }
 }
-.light [data-stack-inner] {
-  filter: brightness(calc(1 - var(--stack-dim, 0) * 0.07));
+/* Excerpt: 1 line on short screens, 2 otherwise (with the 2-line title the copy stays in budget). */
+.stack-excerpt {
+  -webkit-line-clamp: 2;
+}
+@media (max-height: 699px) {
+  .stack-excerpt {
+    -webkit-line-clamp: 1;
+  }
 }
 
 /* ───────────────────────────── About stats strip ───────────────────────────── */
@@ -1049,10 +1261,125 @@ html.lenis body {
   background: color-mix(in oklab, var(--primary) 10%, transparent);
 }
 .stat-tile {
-  transition: border-color 0.35s ease;
+  transition:
+    translate var(--dur-base) var(--ease-spring),
+    border-color var(--dur-base) ease,
+    box-shadow var(--dur-base) ease;
 }
 .stat-tile:hover {
-  border-color: color-mix(in oklab, var(--brand-lavender) 45%, transparent);
+  translate: 0 -4px;
+  border-color: color-mix(in oklab, var(--brand-lavender) 55%, transparent);
+  box-shadow:
+    var(--card-shadow-hover),
+    0 0 0 1px color-mix(in oklab, var(--brand-lavender) 25%, transparent);
+}
+.stat-chip {
+  transition: transform var(--dur-base) var(--ease-pop);
+}
+.stat-tile:hover .stat-chip {
+  transform: translateY(-2px) rotate(-8deg);
+}
+
+/* ───────────────────────────── Apple-style surfaces & buttons ───────────────────────────── */
+
+/*
+ * One card surface for the home page (services, process, stats, FAQ, help card): continuous corners
+ * (24px; squircle where corner-shape is supported, with a larger radius so the visual curve matches),
+ * hairline border, a faint top sheen in dark (glassy) and layered soft shadows in light.
+ */
+.surface-card {
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  background-image: var(--card-sheen);
+  box-shadow: var(--card-shadow);
+}
+@supports (corner-shape: squircle) {
+  .surface-card {
+    corner-shape: squircle;
+    border-radius: 44px;
+  }
+}
+/* Hover lift (translate, so it composes with any transform animation). */
+.lift {
+  transition:
+    translate var(--dur-base) var(--ease-spring),
+    box-shadow var(--dur-base) ease,
+    border-color var(--dur-base) ease;
+}
+.lift:hover {
+  translate: 0 -4px;
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* Buttons: spring press + smooth colours (buttonClasses). */
+.btn-press {
+  transition:
+    transform var(--dur-base) var(--ease-spring),
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+  transition-duration: 0.12s;
+}
+/* Magnetic wrapper: springs back on leave, follows the pointer quickly while pulled. */
+.magnetic {
+  transition: translate var(--dur-slow) var(--ease-spring);
+}
+.magnetic[data-pull] {
+  transition: translate 0.15s ease-out;
+}
+/* Shine sweep on hover (primary button on the CTA band). */
+.btn-shine {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 30%, var(--shine) 50%, transparent 70%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.btn-shine:hover::after {
+  transform: translateX(120%);
+  transition: transform 0.9s var(--ease-out-expo);
+}
+[dir='rtl'] .btn-shine::after {
+  transform: translateX(120%);
+}
+[dir='rtl'] .btn-shine:hover::after {
+  transform: translateX(-120%);
+}
+
+/* Parallax frame (ui/Parallax): the moving layer is 48px taller so its edges never show. */
+.parallax-layer {
+  position: absolute;
+  inset: -24px 0;
+}
+
+/* Final CTA band: a slow drifting pixel pattern (transform only, very subtle). */
+.cta-pixels {
+  position: absolute;
+  inset: -56px;
+  z-index: -1;
+  pointer-events: none;
+  background-image: conic-gradient(at 6px 6px, transparent 75%, var(--on-primary) 0);
+  background-size: 28px 28px;
+  opacity: 0.07;
+  mask-image: radial-gradient(ellipse at 70% 40%, #000, transparent 70%);
+  animation: cta-drift 36s linear infinite alternate;
+}
+@keyframes cta-drift {
+  to {
+    transform: translate3d(-56px, 28px, 0);
+  }
 }
 
 /* ───────────────────────────── Clients marquee ───────────────────────────── */
@@ -1188,4 +1515,35 @@ html.lenis body {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* Mobile menu glass sheet (MobileMenu): the pill's glass, more opaque (long text on top). */
+.glass-sheet {
+  border-radius: 28px;
+  border: 1px solid var(--glass-border);
+  background: color-mix(in oklab, var(--bg) 84%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  backdrop-filter: saturate(180%) blur(28px);
+  box-shadow: var(--glass-shadow);
+}
+.border-glass {
+  border-color: var(--glass-border);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-sheet {
+    background: var(--glass-solid);
+  }
+}
+
+/* Stacking cards: title capped at 2 lines only while stacked (the carousel has no height budget). */
+@media (min-width: 768px) and (min-height: 600px) {
+  .stack-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+.stack-shade {
+  background: var(--stack-shade);
 }

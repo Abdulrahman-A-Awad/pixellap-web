@@ -1,6 +1,8 @@
 import { ArrowRight, Play } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { buttonClasses } from '@/components/ui/Button';
 import { CtaLink } from '@/components/ui/CtaLink';
+import { Magnetic } from '@/components/ui/Magnetic';
 import { cn } from '@/lib/cn';
 import type { HeroSection, SiteSettings } from '@/lib/api/types';
 import { settingValue } from '@/lib/site/settings';
@@ -48,13 +50,26 @@ export function Hero({ hero, settings, t }: HeroProps) {
           <div className="max-w-2xl pt-6 pb-14 lg:max-w-[min(46vw,620px)] lg:py-0">
             <WordReveal id={HERO_TITLE_ID} text={title} className="text-display text-balance" />
 
-            {hero.subtitle && <p className="mt-6 max-w-[34rem] text-lead text-pretty text-muted">{hero.subtitle}</p>}
+            {/* Subtitle + buttons rise in after the title (pure CSS, .hero-rise: server HTML, LCP-safe). */}
+            {hero.subtitle && (
+              <p
+                className="hero-rise mt-6 max-w-[34rem] text-lead text-pretty text-muted"
+                style={{ '--rise-i': 0 } as CSSProperties}
+              >
+                {hero.subtitle}
+              </p>
+            )}
 
-            <div className="mt-10 flex flex-wrap items-center gap-3">
-              <CtaLink cta={primary} className={buttonClasses('primary', 'px-6')}>
-                {primary.label}
-                <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
-              </CtaLink>
+            <div
+              className="hero-rise mt-10 flex flex-wrap items-center gap-3"
+              style={{ '--rise-i': 1 } as CSSProperties}
+            >
+              <Magnetic>
+                <CtaLink cta={primary} className={buttonClasses('primary', 'px-6')}>
+                  {primary.label}
+                  <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
+                </CtaLink>
+              </Magnetic>
 
               <CtaLink cta={secondary} className={secondaryClass}>
                 {secondary.label}

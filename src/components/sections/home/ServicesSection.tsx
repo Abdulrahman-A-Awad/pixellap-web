@@ -34,7 +34,7 @@ export function ServicesSection({ section, t }: { section: ServicesData; t: Tran
           }
         />
 
-        <StackingCards>
+        <StackingCards label={section.title ?? allLabel}>
           {section.categories.map((category, i) => (
             <ServiceCard
               key={category.slug}

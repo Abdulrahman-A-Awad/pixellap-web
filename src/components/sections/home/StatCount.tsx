@@ -42,16 +42,22 @@ export function StatCount({ value, className = 'font-display-thin' }: { value: n
     return stop;
   }, []);
 
+  const text = value.toLocaleString('en-US');
   return (
-    <span
-      ref={ref}
-      data-count={state}
-      // The counter overlays the final number (globals.css), so the box keeps its final width.
-      // Face: thin by default (StatsSection), bold in About.
-      className={cn('stat-count', className)}
-      style={{ '--to': value } as CSSProperties}
-    >
-      <span className="stat-final">{value.toLocaleString('en-US')}</span>
-    </span>
+    <>
+      {/* Announced once, whatever the visual state (the counting digits are generated content). */}
+      <span className="sr-only">{text}</span>
+      <span
+        ref={ref}
+        aria-hidden="true"
+        data-count={state}
+        // The counter overlays the final number (globals.css), so the box keeps its final width.
+        // Face: thin by default (StatsSection), bold in About.
+        className={cn('stat-count', className)}
+        style={{ '--to': value } as CSSProperties}
+      >
+        <span className="stat-final">{text}</span>
+      </span>
+    </>
   );
 }

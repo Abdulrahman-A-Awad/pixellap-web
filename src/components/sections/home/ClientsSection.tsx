@@ -1,3 +1,4 @@
+import { Reveal } from '@/components/motion/Reveal';
 import { SectionHeading } from '@/components/sections/SectionHeading';
 import type { ClientLogo, ClientsSection as ClientsData } from '@/lib/api/types';
 
@@ -47,10 +48,7 @@ export function ClientsSection({ section }: { section: ClientsData }) {
           align="center"
         />
       </div>
-      <div
-        data-reveal
-        className="marquee relative mt-10 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_10%,#000_90%,transparent)]"
-      >
+      <Reveal className="marquee relative mt-10 overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_10%,#000_90%,transparent)]">
         <ul className="marquee-track flex w-max">
           {section.items.map((client) => (
             <li key={client.name}>
@@ -63,7 +61,7 @@ export function ClientsSection({ section }: { section: ClientsData }) {
             </li>
           ))}
         </ul>
-      </div>
+      </Reveal>
     </section>
   );
 }

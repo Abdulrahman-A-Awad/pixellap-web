@@ -15,16 +15,14 @@ import { LanguageSwitch } from './LanguageSwitch';
 import { NAV_ITEMS, isActive } from './nav';
 import { ThemeToggle } from './ThemeToggle';
 
-const GRID_COLS = 8;
-const GRID_ROWS = 12;
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * Full-screen menu sheet (≤ 1023px): pixel-grid reveal, large staggered links, then the CTA +
- * WhatsApp buttons and the language pill + theme toggle at the bottom. Focus trap, Esc / close
- * button, body scroll locked.
+ * Menu (≤ 1023px) as a glass sheet that drops from the navbar pill: dimmed + blurred page behind,
+ * translucent panel (same glass as the pill), large staggered links, then the CTA + WhatsApp and the
+ * language pill + theme toggle. Focus trap, Esc / close button / backdrop tap, page scroll locked.
  */
 export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { site, t } = useSite();
@@ -70,8 +68,6 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
     };
   }, [open]);
 
-  const cells = Array.from({ length: GRID_COLS * GRID_ROWS }, (_, i) => i);
-
   return (
     <MotionConfig reducedMotion="user">
       <AnimatePresence>
@@ -84,74 +80,57 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
             aria-modal="true"
             aria-label={t('misc.menu')}
             data-lenis-prevent
-            className="fixed inset-0 z-50 overflow-y-auto lg:hidden"
+            className="fixed inset-0 z-50 lg:hidden"
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.25, delay: 0.15 } }}
+            exit={{ opacity: 1, transition: { duration: 0.3 } }}
           >
-            {/* Solid sheet under the grid once it has filled in (hides sub-pixel seams between cells). */}
+            {/* Backdrop: dims + blurs the page; tap closes. */}
             <motion.div
               aria-hidden="true"
-              className="absolute inset-0 bg-surface"
+              onClick={onClose}
+              className="absolute inset-0 bg-ink/25 backdrop-blur-[2px]"
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.2, delay: 0.45 } }}
-              exit={{ opacity: 0, transition: { duration: 0.05 } }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
             />
-            {/* Pixel-grid reveal */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 grid"
-              style={{
-                gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-                gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
-              }}
-            >
-              {cells.map((i) => {
-                const col = i % GRID_COLS;
-                const row = Math.floor(i / GRID_COLS);
-                return (
-                  <motion.span
-                    key={i}
-                    className="bg-surface"
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1.02, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ duration: 0.35, ease: EASE, delay: (row + col) * 0.018 }}
-                  />
-                );
-              })}
-            </div>
 
-            <div className="relative flex min-h-full flex-col">
-              <div className="container-page flex h-(--header-h) items-center justify-between">
-                <Logo variant="horizontal" height={32} alt={site.settings.site_name} />
+            <motion.div
+              className="glass-sheet absolute inset-x-3 top-3 flex max-h-[calc(100svh-24px)] origin-top flex-col overflow-y-auto"
+              initial={{ opacity: 0, y: -12, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97, transition: { duration: 0.22, ease: EASE } }}
+              transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+            >
+              <div className="flex h-(--pill-h) shrink-0 items-center justify-between ps-5 pe-2">
+                <Logo variant="horizontal" height={30} alt={site.settings.site_name} />
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex size-11 items-center justify-center rounded-pill hover:bg-surface-2"
+                  className="btn-press inline-flex size-11 items-center justify-center rounded-pill hover:bg-surface-2"
                 >
                   <X aria-hidden="true" className="size-6" />
                   <span className="sr-only">{t('misc.close')}</span>
                 </button>
               </div>
 
-              <nav aria-label={t('misc.main_navigation')} className="container-page flex-1 py-8">
-                <ul className="flex flex-col gap-2">
+              <nav aria-label={t('misc.main_navigation')} className="px-5 pt-2 pb-6">
+                <ul className="flex flex-col">
                   {NAV_ITEMS.map((item, index) => {
                     const active = isActive(pathname, item.href);
                     return (
                       <motion.li
                         key={item.href}
-                        initial={{ opacity: 0, y: 24 }}
+                        initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 12, transition: { duration: 0.15 } }}
-                        transition={{ duration: 0.5, ease: EASE, delay: 0.25 + index * 0.07 }}
+                        transition={{ duration: 0.45, ease: EASE, delay: 0.06 + index * 0.06 }}
                       >
                         <Link
                           href={item.href}
                           onClick={onClose}
                           aria-current={active ? 'page' : undefined}
                           className={cn(
-                            'flex items-center gap-4 py-2.5 text-[clamp(2rem,8vw,2.75rem)] leading-tight font-bold transition-colors',
+                            'border-glass flex items-center gap-3.5 border-b py-3.5 text-[1.75rem] leading-tight font-bold transition-colors',
                             active ? 'text-link' : 'text-text hover:text-link',
                           )}
                         >
@@ -171,11 +150,10 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
               </nav>
 
               <motion.div
-                className="container-page flex flex-col gap-6 pb-10"
-                initial={{ opacity: 0, y: 16 }}
+                className="flex flex-col gap-5 px-5 pb-5"
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                transition={{ duration: 0.45, ease: EASE, delay: 0.25 + NAV_ITEMS.length * 0.07 }}
+                transition={{ duration: 0.45, ease: EASE, delay: 0.06 + NAV_ITEMS.length * 0.06 }}
               >
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Link href="/contact" onClick={onClose} className={buttonClasses('primary', 'w-full')}>
@@ -194,12 +172,12 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
                     </a>
                   )}
                 </div>
-                <div className="flex items-center justify-between gap-4 border-t border-border pt-6">
+                <div className="flex items-center justify-between gap-4">
                   <LanguageSwitch onNavigate={onClose} />
                   <ThemeToggle className="border border-border" />
                 </div>
               </motion.div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
