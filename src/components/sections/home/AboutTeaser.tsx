@@ -1,7 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { PixelComposition } from '@/components/brand/PixelComposition';
-import { PixelIcon, type PixelIconName } from '@/components/brand/PixelIcon';
 import { Eyebrow, SectionHeading } from '@/components/sections/SectionHeading';
 import { Reveal } from '@/components/motion/Reveal';
 import { CtaLink } from '@/components/ui/CtaLink';
@@ -9,10 +8,7 @@ import { Parallax } from '@/components/ui/Parallax';
 import type { AboutSection, StatsSection } from '@/lib/api/types';
 import { coverSizes, imageSource } from '@/lib/images';
 import { withSiteName } from '@/lib/site/brand';
-import { StatCount } from './StatCount';
-
-/** Decorative icon per stat tile (growth, people, time, quality), cycled. */
-const STAT_ICONS: PixelIconName[] = ['chart', 'people', 'clock', 'star'];
+import { StatTiles } from './StatTiles';
 
 /**
  * Home "About" (+ numbers): rounded image with the pixel-mark overlay | eyebrow, H2, text, link.
@@ -120,34 +116,7 @@ export function AboutTeaser({
                 {stats.subtitle && <p className="measure text-muted">{withSiteName(stats.subtitle, siteName)}</p>}
               </div>
             )}
-            <dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
-              {items.map((stat, i) => (
-                <Reveal
-                  key={`${stat.label}-${i}`}
-                  index={i}
-                  className="stat-tile surface-card row-span-2 grid grid-rows-subgrid gap-y-2 p-5 sm:p-6"
-                >
-                  {/* Row 1 (aligned to the bottom, so it sits right above the number): chip + label. */}
-                  <dt className="flex flex-col items-start gap-2 self-end text-meta text-muted sm:flex-row sm:items-center sm:gap-2.5">
-                    <span
-                      aria-hidden="true"
-                      className="stat-chip inline-flex size-8 shrink-0 items-center justify-center rounded-[10px] text-link"
-                    >
-                      <PixelIcon name={STAT_ICONS[i % STAT_ICONS.length]} cell={3} />
-                    </span>
-                    <span className="text-pretty">{stat.label}</span>
-                  </dt>
-                  <dd>
-                    {/* "120+": numeral block always LTR; suffix after it, accent, smaller, no gap. */}
-                    <bdi dir="ltr" className="stat-number inline-flex items-baseline text-stat">
-                      {stat.prefix && <span className="stat-affix">{stat.prefix}</span>}
-                      <StatCount value={stat.value} className="font-bold" />
-                      {stat.suffix && <span className="stat-affix">{stat.suffix}</span>}
-                    </bdi>
-                  </dd>
-                </Reveal>
-              ))}
-            </dl>
+            <StatTiles items={items} />
           </div>
         )}
       </div>

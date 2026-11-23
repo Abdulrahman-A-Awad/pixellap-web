@@ -154,7 +154,7 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   1200×630 JPG) with width/height/alt/type; og:locale `en_US` / `ar_AE` + alternate; twitter summary_large_image.
   Pre-launch, link-preview bots pass the basic auth (API runbook §13).
 - Home renders `/home` sections in API order (`app/[locale]/page.tsx` → `renderSection`). The stats render inside the
-  About section (`AboutTeaser`: a full-width strip of 4 tiles under the image | text columns); the standalone `StatsSection` only shows on home when About is hidden (and on /about).
+  About section (`AboutTeaser`: a full-width strip of 4 tiles under the image | text columns); the standalone `StatsSection` only shows on home when About is hidden (and on /about). Both use THE tile component `home/StatTiles`.
   Sections live in `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `PageHero`, `ui/CtaLink`.
 - **Reveal on scroll:** add `data-reveal` (stagger with `style={{'--reveal-i': n}}`). Pure CSS scroll-driven animation
   (`animation-timeline: view()`, in `@supports` + no-preference motion): no JS, never touches server HTML; on-screen
@@ -174,7 +174,7 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   `StatCount` adds an sr-only copy of the value; count-up = 1.4s ease-out-cubic.
   No letter-spacing in Arabic (forced to 0 globally).
 - Numbers inside RTL text: wrap in `<bdi dir="ltr">`. Stats read "120+" in both languages (prefix/suffix inside the bdi,
-  `.stat-affix` = accent, 0.72em, no gap). About stat tiles: chip + label row, number below, subgrid rows so numbers align. Pixel numerals: `brand/PixelDigits`.
+  `.stat-affix` = accent, 0.72em, no gap). Stat tiles (`home/StatTiles`): chip + label row, number below, subgrid rows so numbers align. Pixel numerals: `brand/PixelDigits`.
 - Page transitions: `motion/PageTransition` (CSS pixel grid, same-locale internal links only, focus → `<main>`).
 - FAQ = `home/FaqList` (client, exclusive disclosure accordion: grid-rows 0fr→1fr height animation in every browser,
   `visibility` after close, open card highlighted, + → ×), inside `home/FaqSection` (reused on category pages).
@@ -185,7 +185,7 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Services: `/services` = `services/ServicesBento` (fixed 2-large + 4-medium layout); `/services/[slug]` = CategoryHero
   (breadcrumb + BreadcrumbList), overview (`.prose-rich`), sticky `ServiceIndex` / mobile `ServiceChips`, `ServiceItemCard`
   ("Request this service" → `/contact?service=&item=` prefills the form), FAQ, `CategoryRail`, CTA, Service JSON-LD.
-- Contact (`/contact`, `components/contact/*`): `ContactHero` (centred eyebrow/title/subtitle, `.contact-glow`, CSS
+- Contact (`/contact`, `components/contact/*`): `ContactHero` (centred eyebrow/title/subtitle, `.page-glow`, CSS
   `.hero-rise`) → `QuickContact` (glass cards `.glass-card` WhatsApp / email / call overlapping the hero; each hidden when
   its setting is empty/TODO; WhatsApp = widget prefill with the page title; phone via `formatPhone` + `<bdi dir="ltr">`) →
   form (7/12) + `ContactInfoCard` (5/12, sticky: response chip, hours, address, `layout/SocialLinks`, map `.map-embed`) →
@@ -195,6 +195,14 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   shake on failed submit (`data-attempt` odd/even), error summary (role=alert) and focus on the first invalid field in
   VISUAL order (`shouldFocusError: false` + `focusFirst`), success = `.form-swap` + CSS `PixelCheck` + WhatsApp.
   JSON-LD: `contactPageJsonLd` (ContactPage + Organization contact point). Footer and contact show the phone formatted.
+- About (`/about`): `about/AboutHero` (centred eyebrow = `nav.about`, title, subtitle, `.page-glow`, `.hero-rise`; the
+  hero image in a 28px `ui/ScrollFrame`: `--sp` 0→1 while scrolling away → scale 1→.92 + layer drift 0→24px, CSS
+  `.scroll-frame*`) → CMS blocks in order via `about/PageBlocks` (`PageBlockView`: image_text = story: first sentence as
+  a large lead, body, last paragraph as `.story-quote`, image on the end side / first on phones with `Parallax`;
+  mission_vision = two equal `.surface-card .glow-card` with pixel chips; values = balanced grid `VALUE_GRID` by count)
+  → home `StatsSection`, `ProcessSection`, `ClientsSection` (home CMS data) → ONE `ContactCtaBand`: the page `cta`
+  block, else the home `contact_cta`. Content sections alternate `tone-surface` (first after the hero = surface).
+  JSON-LD `aboutPageJsonLd` (AboutPage + Organization).
 - SEO: `app/sitemap.ts` (from GET /sitemap, en/ar alternates) and `app/robots.ts`. `buildMetadata` falls back to
   `settings.og_image` for pages without their own image.
 - After seeding new ui strings, the Next data cache may still hold the old `/site`: POST the `site` tag to

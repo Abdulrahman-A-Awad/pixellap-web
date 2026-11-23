@@ -109,3 +109,24 @@ export function contactPageJsonLd(
     mainEntity: organization,
   };
 }
+
+/** schema.org AboutPage (about page), with the Organization as main entity. */
+export function aboutPageJsonLd(
+  site: Site,
+  locale: Locale,
+  page: { title: string; description?: string | null; image?: string | null },
+  alternateName: string | null = null,
+): Record<string, unknown> {
+  const organization = organizationJsonLd(site, locale, alternateName);
+  delete organization['@context']; // nested entity: the page carries the context
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: page.title,
+    ...(page.description ? { description: page.description } : {}),
+    ...(page.image ? { primaryImageOfPage: page.image } : {}),
+    url: `${SITE_URL}/${locale}/about`,
+    inLanguage: locale,
+    mainEntity: organization,
+  };
+}

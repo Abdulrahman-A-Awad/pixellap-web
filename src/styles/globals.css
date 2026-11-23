@@ -1260,7 +1260,7 @@ html.lenis body {
 .stat-chip {
   background: color-mix(in oklab, var(--primary) 10%, transparent);
 }
-.stat-tile {
+:where(.stat-tile) {
   transition:
     translate var(--dur-base) var(--ease-spring),
     border-color var(--dur-base) ease,
@@ -1301,7 +1301,7 @@ html.lenis body {
   }
 }
 /* Hover lift (translate, so it composes with any transform animation). */
-.lift {
+:where(.lift) {
   transition:
     translate var(--dur-base) var(--ease-spring),
     box-shadow var(--dur-base) ease,
@@ -1551,7 +1551,7 @@ html.lenis body {
 /* ───────────────────────────── Contact page ───────────────────────────── */
 
 /* Hero: soft radial brand glow behind the centred copy (decorative, transform-free). */
-.contact-glow {
+.page-glow {
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -1560,7 +1560,7 @@ html.lenis body {
     radial-gradient(50% 60% at 50% 30%, color-mix(in oklab, var(--brand-lavender) 22%, transparent), transparent 70%),
     radial-gradient(35% 40% at 75% 55%, color-mix(in oklab, var(--brand-iris) 14%, transparent), transparent 70%);
 }
-.light .contact-glow {
+.light .page-glow {
   background:
     radial-gradient(50% 60% at 50% 30%, color-mix(in oklab, var(--brand-lavender) 16%, transparent), transparent 70%),
     radial-gradient(35% 40% at 75% 55%, color-mix(in oklab, var(--brand-pearl) 80%, transparent), transparent 70%);
@@ -1791,4 +1791,69 @@ textarea.float-input {
     opacity: 0;
     transform: translateY(12px);
   }
+}
+
+/* ───────────────────────────── About page ───────────────────────────── */
+
+/*
+ * Hero media frame (ui/ScrollFrame writes --sp 0 → 1 while scrolling away from the top): eases down to
+ * scale .92 while the image layer (48px taller than the frame) drifts 0 → 24px for depth.
+ */
+.scroll-frame {
+  scale: calc(1 - var(--sp, 0) * 0.08);
+  transform-origin: 50% 0;
+}
+.scroll-frame-layer {
+  position: absolute;
+  inset: -24px 0;
+  translate: 0 calc(var(--sp, 0) * 24px);
+}
+
+/* Equal glass cards (mission / vision, values): hover lift + lavender glow + chip tilt. */
+/* :where() (here, .stat-tile and .lift): zero specificity, so on a Reveal element the [data-reveal-state] transition list (which already includes these hover properties) wins. */
+:where(.glow-card) {
+  transition:
+    translate var(--dur-base) var(--ease-spring),
+    border-color var(--dur-base) ease,
+    box-shadow var(--dur-base) ease;
+}
+.glow-card:hover {
+  translate: 0 -4px;
+  border-color: color-mix(in oklab, var(--brand-lavender) 55%, transparent);
+  box-shadow:
+    var(--card-shadow-hover),
+    0 0 0 1px color-mix(in oklab, var(--brand-lavender) 25%, transparent),
+    0 24px 64px -24px color-mix(in oklab, var(--brand-iris) 35%, transparent);
+}
+.glow-chip {
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  transition: transform var(--dur-base) var(--ease-pop);
+}
+.glow-card:hover .glow-chip {
+  transform: translateY(-2px) rotate(-8deg);
+}
+/* Soft brand light in the card's top inline-start corner (mission / vision). */
+.card-light {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    60% 70% at 0% 0%,
+    color-mix(in oklab, var(--brand-lavender) 16%, transparent),
+    transparent 70%
+  );
+}
+[dir='rtl'] .card-light {
+  background: radial-gradient(
+    60% 70% at 100% 0%,
+    color-mix(in oklab, var(--brand-lavender) 16%, transparent),
+    transparent 70%
+  );
+}
+
+/* Who we are: pulled quote with a brand bar on the reading-start side. */
+.story-quote {
+  border-inline-start: 3px solid;
+  border-image: linear-gradient(to bottom, var(--brand-lavender), var(--brand-iris)) 1;
 }

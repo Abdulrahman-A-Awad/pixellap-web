@@ -17,7 +17,7 @@ export function ContactHero({
 }) {
   return (
     <section className="relative isolate overflow-clip pt-[calc(var(--header-h)+64px)] pb-28 md:pt-[calc(var(--header-h)+88px)] md:pb-36">
-      <div aria-hidden="true" className="contact-glow" />
+      <div aria-hidden="true" className="page-glow" />
       <div className="container-page flex flex-col items-center gap-4 text-center">
         <div className="hero-rise" style={{ '--rise-i': 0 } as CSSProperties}>
           <Eyebrow>{eyebrow}</Eyebrow>

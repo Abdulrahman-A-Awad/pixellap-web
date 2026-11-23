@@ -1,12 +1,26 @@
 import type { Metadata } from 'next';
-import { PageBlocks } from '@/components/sections/about/PageBlocks';
+import type { ReactNode } from 'react';
+import { AboutHero } from '@/components/sections/about/AboutHero';
+import { type ContentBlock, PageBlockView } from '@/components/sections/about/PageBlocks';
 import { ContactCtaBand } from '@/components/sections/ContactCtaBand';
+import { ClientsSection } from '@/components/sections/home/ClientsSection';
+import { ProcessSection } from '@/components/sections/home/ProcessSection';
 import { StatsSection } from '@/components/sections/home/StatsSection';
-import { PageHero } from '@/components/sections/PageHero';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { resolveLocale } from '@/i18n/locale';
 import { getHome, getPage, getSite } from '@/lib/api/endpoints';
-import type { ContactCtaSection, StatsSection as StatsData } from '@/lib/api/types';
+import type {
+  ClientsSection as ClientsData,
+  ContactCtaSection,
+  CtaBlock,
+  ProcessSection as ProcessData,
+  StatsSection as StatsData,
+} from '@/lib/api/types';
+import { cn } from '@/lib/cn';
+import { imageSource } from '@/lib/images';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { aboutPageJsonLd, alternateSiteName } from '@/lib/seo/structured-data';
+import { withSiteName } from '@/lib/site/brand';
 import { settingValue, whatsappUrl } from '@/lib/site/settings';
 import { createTranslator } from '@/lib/site/translate';
 
@@ -21,6 +35,13 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/about'>)
   });
 }
 
+/**
+ * About: hero (eyebrow + title + subtitle, wide scroll-scaled image) → the CMS content blocks in
+ * order (who we are, mission & vision, values, text) → the HOME stats tiles, process (scroll-linked
+ * line) and clients marquee (same components, same CMS data and visibility as home) → ONE closing CTA
+ * band: the page's `cta` block when it has one, otherwise the global home CTA. Content sections
+ * alternate bg / surface like the home page.
+ */
 export default async function AboutPage({ params }: PageProps<'/[locale]/about'>) {
   const locale = await resolveLocale(params);
   const [{ data: page }, { data: site }, { data: home }] = await Promise.all([
@@ -29,40 +50,96 @@ export default async function AboutPage({ params }: PageProps<'/[locale]/about'>
     getHome(locale),
   ]);
   const t = createTranslator(site.ui_strings);
+  const siteName = site.settings.site_name;
 
-  // Reuse the home stats + closing CTA (they follow the home sections' visibility).
   const stats = home.find((s): s is StatsData => s.key === 'stats');
-  const contactCta = home.find((s): s is ContactCtaSection => s.key === 'contact_cta');
+  const process = home.find((s): s is ProcessData => s.key === 'process');
+  const clients = home.find((s): s is ClientsData => s.key === 'clients');
+  const globalCta = home.find((s): s is ContactCtaSection => s.key === 'contact_cta');
+  const pageCta = page.blocks.find((b): b is CtaBlock => b.type === 'cta');
   const whatsapp = whatsappUrl(site.settings);
   const responseTime = settingValue(site.settings.response_time);
 
+  // Content sections in order; each entry renders only when it has content (keeps the bands alternating).
+  const sections: { key: string; node: ReactNode }[] = [];
+  let imageBlocks = 0;
+  for (const block of page.blocks) {
+    if (block.type === 'cta') continue;
+    const flip = block.type === 'image_text' && imageBlocks++ % 2 === 1;
+    sections.push({ key: `block-${block.id}`, node: <PageBlockView block={block as ContentBlock} flip={flip} /> });
+  }
+  if (stats && stats.items.length > 0) {
+    sections.push({
+      key: 'stats',
+      node: (
+        <StatsSection
+          id="about-stats"
+          items={stats.items}
+          eyebrow={withSiteName(stats.eyebrow, siteName)}
+          title={withSiteName(stats.title, siteName)}
+          subtitle={withSiteName(stats.subtitle, siteName)}
+        />
+      ),
+    });
+  }
+  if (process && process.steps.length > 0)
+    sections.push({ key: 'process', node: <ProcessSection section={process} /> });
+  if (clients && clients.items.length > 0)
+    sections.push({ key: 'clients', node: <ClientsSection section={clients} /> });
+
+  const cta = pageCta
+    ? {
+        title: pageCta.title,
+        subtitle: pageCta.body,
+        responseTime,
+        label: t('actions.start_project'),
+        href: '/contact',
+      }
+    : globalCta
+      ? {
+          title: globalCta.title,
+          subtitle: globalCta.subtitle,
+          responseTime: globalCta.response_time ?? responseTime,
+          label: globalCta.cta?.label ?? t('actions.start_project'),
+          href: globalCta.cta?.url?.startsWith('/') ? globalCta.cta.url : '/contact',
+        }
+      : null;
+
   return (
     <>
-      <PageHero title={page.title} subtitle={page.subtitle} image={page.hero} />
+      <AboutHero eyebrow={t('nav.about')} title={page.title} subtitle={page.subtitle} image={page.hero} />
 
-      <PageBlocks
-        blocks={page.blocks}
-        cta={{
-          label: t('actions.start_project'),
-          whatsappUrl: whatsapp,
-          whatsappLabel: t('contact.whatsapp'),
-          responseTime,
-        }}
-      />
+      {sections.map((section, i) => (
+        <div key={section.key} data-section={section.key} className={cn(i % 2 === 0 && 'tone-surface')}>
+          {section.node}
+        </div>
+      ))}
 
-      {stats && <StatsSection items={stats.items} title={stats.title} eyebrow={stats.eyebrow} id="about-stats" />}
-
-      {contactCta && (
+      {cta && (
         <ContactCtaBand
           id="about-contact"
-          title={contactCta.title}
-          subtitle={contactCta.subtitle}
-          responseTime={contactCta.response_time ?? responseTime}
+          title={cta.title}
+          subtitle={cta.subtitle}
+          responseTime={cta.responseTime}
           whatsappUrl={whatsapp}
-          ctaLabel={contactCta.cta?.label ?? t('actions.start_project')}
+          ctaLabel={cta.label}
+          ctaHref={cta.href}
           whatsappLabel={t('contact.whatsapp')}
         />
       )}
+
+      <JsonLd
+        data={aboutPageJsonLd(
+          site,
+          locale,
+          {
+            title: page.seo.title || page.title,
+            description: page.seo.description,
+            image: page.hero ? imageSource(page.hero) : null,
+          },
+          await alternateSiteName(locale),
+        )}
+      />
     </>
   );
 }
