@@ -2241,3 +2241,174 @@ textarea.float-input {
 .svc-row[data-open] .svc-row-chevron {
   transform: translateY(25%) rotate(225deg);
 }
+
+/* ───────────────────────────── Category page ───────────────────────────── */
+
+/* Hero frame: phones 4:3; from lg a wide frame that fits the viewport under the navbar (1366×657 too). */
+.category-hero-frame {
+  aspect-ratio: 4 / 3;
+}
+@media (min-width: 768px) {
+  .category-hero-frame {
+    aspect-ratio: 16 / 9;
+  }
+}
+@media (min-width: 1024px) {
+  .category-hero-frame {
+    aspect-ratio: auto;
+    height: clamp(460px, calc(100svh - var(--header-h) - 120px), 700px);
+  }
+}
+/* Dark gradient from the reading start (the copy side), both themes. */
+.category-hero-shade {
+  background: linear-gradient(
+    to right,
+    color-mix(in oklab, #06030f 88%, transparent) 0%,
+    color-mix(in oklab, #06030f 62%, transparent) 38%,
+    transparent 72%
+  );
+}
+[dir='rtl'] .category-hero-shade {
+  background: linear-gradient(
+    to left,
+    color-mix(in oklab, #06030f 88%, transparent) 0%,
+    color-mix(in oklab, #06030f 62%, transparent) 38%,
+    transparent 72%
+  );
+}
+/* Copy colours: theme colours below lg (under the media), white on the frame from lg. */
+.category-hero-number {
+  color: var(--link);
+}
+.category-hero-muted {
+  color: var(--text-muted);
+}
+.category-hero-fact {
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
+  color: var(--link);
+}
+@media (min-width: 1024px) {
+  .category-hero-copy {
+    color: #fff;
+  }
+  .category-hero-number {
+    color: rgb(255 255 255 / 0.9);
+  }
+  .category-hero-muted {
+    color: rgb(255 255 255 / 0.82);
+  }
+  .category-hero-fact {
+    background: rgb(255 255 255 / 0.14);
+    color: #fff;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .category-hero-chip {
+    background: rgb(255 255 255 / 0.12);
+  }
+  .category-hero-ghost {
+    border-color: rgb(255 255 255 / 0.4);
+    color: #fff;
+  }
+  .category-hero-ghost:hover {
+    background: rgb(255 255 255 / 0.1);
+  }
+}
+
+/* Service cards: anchors land below the navbar + the sticky service nav; pulse when navigated to. */
+.svc-card {
+  scroll-margin-top: calc(var(--header-h) + var(--dnav-h, 0px) + 16px);
+}
+.svc-card[data-pulse] {
+  animation: card-pulse 1.6s var(--ease-out-expo);
+}
+@keyframes card-pulse {
+  0% {
+    box-shadow:
+      var(--card-shadow),
+      0 0 0 0 color-mix(in oklab, var(--brand-lavender) 70%, transparent);
+    border-color: var(--brand-lavender);
+  }
+  60% {
+    box-shadow:
+      var(--card-shadow),
+      0 0 0 10px color-mix(in oklab, var(--brand-lavender) 0%, transparent);
+    border-color: var(--brand-lavender);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svc-card[data-pulse] {
+    animation: none;
+    border-color: var(--brand-lavender);
+  }
+}
+/* Featured media: the thumb conversion paints first (blurred), so a lazy image is never an empty box. */
+.svc-card-media {
+  background-size: cover;
+  background-position: center;
+}
+.svc-card-media > img {
+  transition: opacity var(--dur-slow) ease;
+}
+/* Pixel bullet: 2×2 brand squares in one element. */
+.pixel-bullet {
+  width: 9px;
+  height: 9px;
+  background:
+    linear-gradient(var(--brand-lavender), var(--brand-lavender)) 0 0 / 4px 4px no-repeat,
+    linear-gradient(var(--brand-iris), var(--brand-iris)) 5px 0 / 4px 4px no-repeat,
+    linear-gradient(var(--brand-iris), var(--brand-iris)) 0 5px / 4px 4px no-repeat,
+    linear-gradient(var(--brand-royal), var(--brand-royal)) 5px 5px / 4px 4px no-repeat;
+}
+
+/* Other categories: hidden scrollbar on the phone snap row; 3 + 2 centred from md (6-col grid). */
+.other-cats {
+  scrollbar-width: none;
+}
+.other-cats::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  .other-cats > li:nth-child(4):nth-last-child(2) {
+    grid-column-start: 2;
+  }
+}
+
+/* Phones: sticky bottom action bar (category page). */
+.mobile-cta-bar {
+  position: fixed;
+  z-index: 40;
+  inset-inline: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  transform: translateY(calc(100% + 24px));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dur-base) var(--ease-spring),
+    opacity var(--dur-fast) ease;
+}
+.mobile-cta-bar.is-shown {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+.mobile-cta-inner {
+  border-radius: var(--radius-pill);
+}
+@supports (corner-shape: squircle) {
+  .mobile-cta-inner {
+    corner-shape: round;
+    border-radius: var(--radius-pill);
+  }
+}
+/* The bar offers WhatsApp: the floating widget steps aside on small screens while it shows. */
+@media (max-width: 1023.98px) {
+  html[data-cta-bar] .wa-widget {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(16px);
+    transition:
+      opacity var(--dur-fast) ease,
+      transform var(--dur-base) var(--ease-spring);
+  }
+}

@@ -1,25 +1,25 @@
-import { ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
-import Image from 'next/image';
-import { PixelComposition } from '@/components/brand/PixelComposition';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import { ContactCtaBand } from '@/components/sections/ContactCtaBand';
 import { FaqSection } from '@/components/sections/home/FaqSection';
+import { ProcessSection } from '@/components/sections/home/ProcessSection';
 import { SectionHeading } from '@/components/sections/SectionHeading';
-import { CategoryHero } from '@/components/sections/services/CategoryHero';
-import { CategoryIcon } from '@/components/sections/services/CategoryIcon';
-import { CategoryRail } from '@/components/sections/services/CategoryRail';
-import { ServiceChips, ServiceIndex } from '@/components/sections/services/ServiceIndex';
-import { ServiceItemCard } from '@/components/sections/services/ServiceItemCard';
+import { CategoryHero } from '@/components/sections/services/category/CategoryHero';
+import { CategoryOverview } from '@/components/sections/services/category/CategoryOverview';
+import { HashPulse } from '@/components/sections/services/category/HashPulse';
+import { MobileCtaBar } from '@/components/sections/services/category/MobileCtaBar';
+import { OtherCategories } from '@/components/sections/services/category/OtherCategories';
+import { ServiceGrid } from '@/components/sections/services/category/ServiceGrid';
+import { DisciplineNav } from '@/components/sections/services/overview/DisciplineNav';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { Link } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/locale';
 import { routing } from '@/i18n/routing';
 import { getCategories, getCategory, getHome, getSite } from '@/lib/api/endpoints';
-import type { ContactCtaSection } from '@/lib/api/types';
+import type { ContactCtaSection, Faq, FaqSection as FaqData, ProcessSection as ProcessData } from '@/lib/api/types';
+import { cn } from '@/lib/cn';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { alternateSiteName, serviceJsonLd } from '@/lib/seo/structured-data';
-import { plural } from '@/lib/site/format';
+import { interpolate, plural } from '@/lib/site/format';
 import { settingValue, whatsappUrl } from '@/lib/site/settings';
 import { createTranslator } from '@/lib/site/translate';
 
@@ -42,6 +42,13 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/services
   });
 }
 
+/**
+ * Category page — a product page: immersive hero (media frame, copy, facts, actions) → overview
+ * statement → services (sticky service nav with scroll-spy over a 2-column grid; image cards are
+ * featured rows) → the shared process → FAQ (topped up with home FAQs below 2) → the other categories
+ * as glass tiles → a category-specific CTA band. Phones get a sticky bottom action bar between the hero
+ * and the CTA band. Content sections alternate bg / surface.
+ */
 export default async function CategoryPage({ params }: PageProps<'/[locale]/services/[slug]'>) {
   const locale = await resolveLocale(params);
   const { slug } = await params;
@@ -58,14 +65,32 @@ export default async function CategoryPage({ params }: PageProps<'/[locale]/serv
   );
   const others = categories.filter((c) => c.slug !== slug);
   const cta = home.find((s): s is ContactCtaSection => s.key === 'contact_cta');
-  const items = category.services.map((s) => ({ id: s.anchor, title: s.title }));
+  const process = home.find((s): s is ProcessData => s.key === 'process');
+  const homeFaq = home.find((s): s is FaqData => s.key === 'faq');
+  const whatsapp = whatsappUrl(site.settings);
+  const contactHref = `/contact?service=${category.slug}`;
+  const countLabel = (n: number) => plural(t, locale, 'services.count', n);
+
+  // FAQ: the category's own; below 2, topped up with the first general home FAQs.
+  const faqs: Faq[] =
+    category.faqs.length >= 2
+      ? category.faqs
+      : [
+          ...category.faqs,
+          ...(homeFaq?.faqs ?? []).filter((f) => !category.faqs.some((c) => c.id === f.id)).slice(0, 2),
+        ];
+
+  // Bands after the hero alternate bg / surface (the overview is first, on surface).
+  let band = 0;
+  const tone = () => (band++ % 2 === 0 ? 'tone-surface' : undefined);
 
   return (
     <>
       <CategoryHero
         category={category}
         index={index}
-        ctaLabel={t('actions.start_project')}
+        facts={[countLabel(category.services.length), t('services.fact_bilingual')]}
+        labels={{ start: t('actions.start_project'), explore: t('services.explore_services') }}
         breadcrumb={
           <Breadcrumbs
             locale={locale}
@@ -79,134 +104,92 @@ export default async function CategoryPage({ params }: PageProps<'/[locale]/serv
         }
       />
 
-      {/* Overview: rich text from the admin editor. */}
       {category.description && (
-        <section aria-labelledby="overview-title" className="py-12 md:py-16">
-          <div className="container-page grid gap-8 lg:grid-cols-[1fr_2fr] lg:gap-16">
-            <h2 id="overview-title" data-reveal className="text-heading">
-              {t('services.overview')}
-            </h2>
-            <div
-              data-reveal
-              className="prose-rich measure text-lead text-muted"
-              dangerouslySetInnerHTML={{ __html: category.description }}
+        <div className={tone()}>
+          <CategoryOverview title={t('services.overview')} description={category.description} />
+        </div>
+      )}
+
+      {category.services.length > 0 && (
+        <section
+          id="services"
+          tabIndex={-1}
+          aria-labelledby="services-list-title"
+          className={cn('services-flow outline-none', tone())}
+        >
+          <DisciplineNav
+            label={t('services.index_label')}
+            items={category.services.map((s) => ({ slug: s.anchor, title: s.title }))}
+          />
+          <div className="container-page flex flex-col gap-8 pt-8 pb-[clamp(64px,8vw,112px)] lg:gap-10 lg:pt-12">
+            <SectionHeading
+              id="services-list-title"
+              title={t('services.list_title')}
+              subtitle={countLabel(category.services.length)}
+            />
+            <ServiceGrid
+              services={category.services}
+              categorySlug={category.slug}
+              requestLabel={t('services.request')}
             />
           </div>
         </section>
       )}
 
-      {/* Services list: sticky index (desktop) + cards. */}
-      {category.services.length > 0 && (
-        <section id="services-list" aria-labelledby="services-list-title" className="py-12 md:py-20">
-          <div className="container-page grid gap-10 lg:grid-cols-[minmax(16rem,22rem)_1fr] lg:gap-16">
-            {/* min-w-0: grid items default to min-width:auto and would grow to fit the chip row. */}
-            <div className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-28 lg:self-start">
-              <SectionHeading
-                id="services-list-title"
-                title={t('services.list_title')}
-                subtitle={plural(t, locale, 'services.count', category.services.length)}
-              />
-              <div className="hidden lg:block">
-                <ServiceIndex items={items} label={t('services.index_label')} />
-              </div>
-              <ServiceChips items={items} label={t('services.jump_to')} />
-            </div>
-
-            <div className="flex min-w-0 flex-col gap-6 md:gap-8">
-              {category.services.map((service, i) => (
-                <ServiceItemCard
-                  key={service.id}
-                  service={service}
-                  index={i}
-                  categorySlug={category.slug}
-                  requestLabel={t('services.request')}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
+      {process && process.steps.length > 0 && (
+        <div className={tone()}>
+          <ProcessSection section={{ ...process, eyebrow: t('services.process_eyebrow') }} />
+        </div>
       )}
 
-      <FaqSection
-        faqs={category.faqs}
-        scope={category.slug}
-        id="category-faq"
-        title={t('services.faq_title')}
-        help={{
-          title: t('faq.help_title'),
-          text: t('faq.help_text'),
-          contactLabel: t('faq.help_cta'),
-          contactHref: `/contact?service=${category.slug}`,
-          whatsappUrl: whatsappUrl(site.settings),
-          whatsappLabel: t('contact.whatsapp'),
-        }}
+      {faqs.length > 0 && (
+        <div className={tone()}>
+          <FaqSection
+            faqs={faqs}
+            scope={category.slug}
+            id="category-faq"
+            title={t('services.faq_title')}
+            help={{
+              title: t('faq.help_title'),
+              text: t('faq.help_text'),
+              contactLabel: t('faq.help_cta'),
+              contactHref,
+              whatsappUrl: whatsapp,
+              whatsappLabel: t('contact.whatsapp'),
+            }}
+          />
+        </div>
+      )}
+
+      <div className={tone()}>
+        <OtherCategories
+          title={t('services.explore_other')}
+          categories={others}
+          all={categories}
+          countLabel={countLabel}
+        />
+      </div>
+
+      <ContactCtaBand
+        id="category-cta"
+        title={interpolate(t('services.cta_title'), { category: category.title })}
+        subtitle={cta?.subtitle ?? null}
+        responseTime={cta?.response_time ?? settingValue(site.settings.response_time)}
+        whatsappUrl={whatsapp}
+        ctaLabel={t('actions.start_project')}
+        ctaHref={contactHref}
+        whatsappLabel={t('contact.whatsapp')}
       />
 
-      {/* Other categories. */}
-      {others.length > 0 && (
-        <section aria-labelledby="other-services-title" className="py-12 md:py-20">
-          <div className="container-page flex flex-col gap-4">
-            <h2 id="other-services-title" className="text-heading">
-              {t('services.explore_other')}
-            </h2>
-            <CategoryRail label={t('services.explore_other')} prevLabel={t('misc.previous')} nextLabel={t('misc.next')}>
-              {others.map((other) => {
-                const otherIndex = categories.findIndex((c) => c.slug === other.slug);
-                return (
-                  <li key={other.slug} className="w-[78%] shrink-0 snap-start sm:w-[45%] lg:w-[30%]">
-                    <Link
-                      href={`/services/${other.slug}`}
-                      className="group flex h-full flex-col overflow-hidden rounded-card border border-border bg-surface transition-[border-color,box-shadow] duration-300 hover:border-lavender/70 hover:shadow-[0_0_40px_-14px_var(--accent-glow)]"
-                    >
-                      <div className="relative aspect-[16/9] overflow-hidden bg-surface-2">
-                        {other.cover ? (
-                          <Image
-                            src={other.cover.conversions?.md ?? other.cover.url}
-                            alt=""
-                            fill
-                            sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 78vw"
-                            className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-[1.04]">
-                            <PixelComposition seed={otherIndex * 17 + 3} cols={8} rows={4} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-1 flex-col gap-2 p-5">
-                        <div className="flex items-center gap-3">
-                          <CategoryIcon icon={other.icon} index={otherIndex} size="sm" />
-                          <h3 className="text-lg font-bold">{other.title}</h3>
-                        </div>
-                        <p className="line-clamp-2 text-sm text-muted">{other.excerpt}</p>
-                        <span className="mt-auto inline-flex items-center gap-2 pt-2 text-sm text-link">
-                          {plural(t, locale, 'services.count', other.services_count)}
-                          <ArrowRight
-                            aria-hidden="true"
-                            className="size-4 transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1"
-                          />
-                        </span>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </CategoryRail>
-          </div>
-        </section>
-      )}
-
-      {cta && (
-        <ContactCtaBand
-          title={cta.title}
-          subtitle={cta.subtitle}
-          responseTime={cta.response_time ?? settingValue(site.settings.response_time)}
-          whatsappUrl={whatsappUrl(site.settings)}
-          ctaLabel={cta.cta?.label ?? t('actions.start_project')}
-          ctaHref={`/contact?service=${category.slug}`}
-          whatsappLabel={t('contact.whatsapp')}
-        />
-      )}
+      <MobileCtaBar
+        href={contactHref}
+        label={t('actions.start_project')}
+        whatsappUrl={whatsapp}
+        whatsappLabel={t('contact.whatsapp')}
+        heroId="category-hero"
+        endId="category-cta"
+      />
+      <HashPulse />
 
       <JsonLd data={serviceJsonLd(category, site, locale, await alternateSiteName(locale))} />
     </>

@@ -201,10 +201,20 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   `scrollToSection` (offset = header + discipline nav; sections carry the same `scroll-margin-top`).
   `ServiceSearch`: combobox over every service (`lib/site/search.ts`: normalised Arabic, `matchRange` maps the highlight
   back to the original text), grouped by discipline, Enter → `/services/{slug}#{anchor}`.
-  `/services/[slug]` = CategoryHero
-  (breadcrumb + BreadcrumbList), overview (`.prose-rich`), sticky `ServiceIndex` / mobile `ServiceChips`, `ServiceItemCard`
-  (id = the API `anchor`; "Request this service" → `/contact?service=&item=` prefills the form), FAQ, `CategoryRail`,
-  CTA, Service JSON-LD.
+- Category page `/services/[slug]` (`services/category/*`): `CategoryHero` (breadcrumb + BreadcrumbList, large
+  `.category-hero-frame` (lg height = viewport − navbar − 120, capped) with Parallax + `ShowcaseVideo` + mark; the copy
+  is rendered ONCE: on the frame over `.category-hero-shade` from lg (white), below the media under lg — never two H1s;
+  no line-clamp on the H1 (it clipped Arabic); facts = services count + `services.fact_bilingual`) →
+  `CategoryOverview` (`splitLead`: first sentence as the lead, rest as body) → `#services.services-flow` with the
+  shared `DisciplineNav` over the service anchors + `ServiceGrid` (`layoutServices`: image cards = featured full rows,
+  alternating; others pair; a card left alone becomes wide — DOM order never changes; featured frames paint the
+  `thumb` conversion as background so a lazy image is never an empty box; `.svc-card` scroll margin covers both bars;
+  `[data-pulse]` ring via `pulse()` / `HashPulse` for deep links) → `ProcessSection` (eyebrow
+  `services.process_eyebrow`) → FAQ (topped up with 2 home FAQs below 2) → `OtherCategories` (glass tiles, 5 / 3+2 /
+  phone snap row) → `ContactCtaBand` with `services.cta_title` → `MobileCtaBar` (< lg; after the hero until the CTA band;
+  `html[data-cta-bar]` hides the floating WhatsApp widget). Service JSON-LD unchanged.
+  In-page scroll offsets (`SectionLink`): `--header-h` is in rem (convert!) and positions come from the offsetTop chain
+  (getBoundingClientRect includes reveal transforms).
 - Contact (`/contact`, `components/contact/*`): `ContactHero` (centred eyebrow/title/subtitle, `.page-glow`, CSS
   `.hero-rise`) → `QuickContact` (glass cards `.glass-card` WhatsApp / email / call overlapping the hero; each hidden when
   its setting is empty/TODO; WhatsApp = widget prefill with the page title; phone via `formatPhone` + `<bdi dir="ltr">`) →
