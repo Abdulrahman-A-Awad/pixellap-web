@@ -1,25 +1,14 @@
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { BRAND_ICONS, BrandIcon, isBrandIcon, type BrandIconName } from '@/components/brand/BrandIcons';
 import { Logo } from '@/components/brand/Logo';
 import { Link } from '@/i18n/navigation';
 import type { Site } from '@/lib/api/types';
-import { settingValue, socialLinks } from '@/lib/site/settings';
+import { formatPhone, telHref } from '@/lib/site/format';
+import { settingValue } from '@/lib/site/settings';
 import type { Translate } from '@/lib/site/translate';
 import { CurrentYear } from './CurrentYear';
 import { NAV_ITEMS } from './nav';
-
-/** Display order of the social icon buttons (only networks with a URL render). */
-const SOCIAL_ORDER: BrandIconName[] = [
-  'facebook',
-  'instagram',
-  'linkedin',
-  'tiktok',
-  'youtube',
-  'x',
-  'behance',
-  'snapchat',
-];
+import { SocialLinks } from './SocialLinks';
 
 function Heading({ children }: { children: ReactNode }) {
   return <h2 className="mb-5 text-meta font-bold text-text">{children}</h2>;
@@ -34,10 +23,6 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
   const address = settingValue(settings.address);
   const hours = settingValue(settings.working_hours);
   const vat = settingValue(settings.vat_number);
-  // Unknown keys are skipped (no icon); the rest follow SOCIAL_ORDER.
-  const socials = socialLinks(settings)
-    .filter((s): s is { network: BrandIconName; url: string } => isBrandIcon(s.network) && s.network !== 'whatsapp')
-    .sort((a, b) => SOCIAL_ORDER.indexOf(a.network) - SOCIAL_ORDER.indexOf(b.network));
 
   return (
     <footer className="border-t border-border bg-surface">
@@ -47,28 +32,7 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
             <Logo variant="horizontal" height={48} alt={settings.site_name} />
           </Link>
           <p className="max-w-xs text-muted">{settings.tagline}</p>
-          {socials.length > 0 && (
-            <div>
-              <h2 className="sr-only">{t('footer.follow_us')}</h2>
-              <ul className="flex flex-wrap gap-2.5">
-                {socials.map(({ network, url }) => (
-                  <li key={network}>
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={BRAND_ICONS[network].name}
-                      title={BRAND_ICONS[network].name}
-                      data-network={network}
-                      className="social-btn inline-flex size-11 items-center justify-center rounded-pill border border-border bg-bg text-muted"
-                    >
-                      <BrandIcon name={network} className="size-[18px]" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <SocialLinks settings={settings} label={t('footer.follow_us')} />
         </div>
 
         <nav aria-label={t('footer.quick_links')} className="lg:col-span-2">
@@ -111,8 +75,8 @@ export function Footer({ site, t }: { site: Site; t: Translate }) {
             {phone && (
               <li className="flex items-start gap-3">
                 <Phone aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" />
-                <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className={linkClass} dir="ltr">
-                  {phone}
+                <a href={telHref(phone)} className={linkClass} dir="ltr">
+                  {formatPhone(phone)}
                 </a>
               </li>
             )}

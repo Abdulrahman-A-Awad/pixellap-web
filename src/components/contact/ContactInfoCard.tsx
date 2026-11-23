@@ -1,82 +1,71 @@
-import { Clock, Hourglass, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { Clock, Hourglass, MapPin } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { buttonClasses } from '@/components/ui/Button';
+import { SocialLinks } from '@/components/layout/SocialLinks';
 import type { SiteSettings } from '@/lib/api/types';
-import { settingValue, whatsappUrl } from '@/lib/site/settings';
+import { settingValue } from '@/lib/site/settings';
 import type { Translate } from '@/lib/site/translate';
 
 function Row({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return (
-    <li className="flex items-start gap-4">
-      <span className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-primary">
+    <li className="flex items-start gap-3.5">
+      <span
+        aria-hidden="true"
+        className="inline-flex size-10 shrink-0 items-center justify-center rounded-[12px] bg-primary/10 text-link"
+      >
         {icon}
       </span>
-      <div className="min-w-0">
-        <p className="text-sm text-muted">{label}</p>
-        <div className="mt-0.5 break-words text-text">{children}</div>
-      </div>
+      {/* The label is for screen readers; visually the icon says it. */}
+      <p className="min-w-0 pt-2 break-words text-text">
+        <span className="sr-only">{label}: </span>
+        {children}
+      </p>
     </li>
   );
 }
 
-const iconClass = 'size-5';
-
+/**
+ * Contact info (sticky beside the form on desktop): the response-time promise as a chip, working
+ * hours, the address (value only), the social icons (same component as the footer) and the map
+ * (rounded, lazy, slightly desaturated in dark) when Settings has an embed URL. Email / phone /
+ * WhatsApp live in the quick-contact cards above.
+ */
 export function ContactInfoCard({ settings, t }: { settings: SiteSettings; t: Translate }) {
-  const email = settingValue(settings.email);
-  const phone = settingValue(settings.phone);
-  const whatsapp = whatsappUrl(settings);
   const address = settingValue(settings.address);
   const hours = settingValue(settings.working_hours);
   const responseTime = settingValue(settings.response_time);
   const map = settingValue(settings.map_embed_url);
 
   return (
-    <aside className="flex flex-col gap-6 rounded-card border border-border bg-surface p-6 md:p-8">
-      <h2 className="text-xl font-bold">{t('contact.info_title')}</h2>
-
-      <ul className="flex flex-col gap-5">
-        {email && (
-          <Row icon={<Mail aria-hidden="true" className={iconClass} />} label={t('contact.email')}>
-            <a href={`mailto:${email}`} dir="ltr" className="hover:text-primary">
-              {email}
-            </a>
-          </Row>
-        )}
-        {phone && (
-          <Row icon={<Phone aria-hidden="true" className={iconClass} />} label={t('contact.phone')}>
-            <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} dir="ltr" className="hover:text-primary">
-              {phone}
-            </a>
-          </Row>
-        )}
-        {address && (
-          <Row icon={<MapPin aria-hidden="true" className={iconClass} />} label={t('contact.address')}>
-            {address}
-          </Row>
-        )}
-        {hours && (
-          <Row icon={<Clock aria-hidden="true" className={iconClass} />} label={t('footer.working_hours')}>
-            {hours}
-          </Row>
-        )}
+    <aside aria-labelledby="contact-info-title" className="surface-card flex flex-col gap-6 p-6 md:p-8">
+      <div className="flex flex-col items-start gap-3">
+        <h2 id="contact-info-title" className="text-title">
+          {t('contact.info_title')}
+        </h2>
         {responseTime && (
-          <Row icon={<Hourglass aria-hidden="true" className={iconClass} />} label={t('contact.response_time')}>
+          <p className="inline-flex items-center gap-2 rounded-pill bg-primary/10 px-3.5 py-1.5 text-meta font-bold text-link">
+            <Hourglass aria-hidden="true" className="size-4" />
+            <span className="sr-only">{t('contact.response_time')}: </span>
             {responseTime}
-          </Row>
+          </p>
         )}
-      </ul>
+      </div>
 
-      {whatsapp && (
-        <a
-          href={whatsapp}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={buttonClasses('primary', 'bg-whatsapp text-on-whatsapp hover:bg-whatsapp/90')}
-        >
-          <MessageCircle aria-hidden="true" className="size-5" />
-          {t('contact.whatsapp')}
-        </a>
+      {(hours || address) && (
+        <ul className="flex flex-col gap-4">
+          {hours && (
+            <Row icon={<Clock className="size-5" />} label={t('footer.working_hours')}>
+              {hours}
+            </Row>
+          )}
+          {address && (
+            <Row icon={<MapPin className="size-5" />} label={t('contact.address')}>
+              {address}
+            </Row>
+          )}
+        </ul>
       )}
+
+      <SocialLinks settings={settings} label={t('footer.follow_us')} />
 
       {map && (
         <iframe
@@ -84,7 +73,7 @@ export function ContactInfoCard({ settings, t }: { settings: SiteSettings; t: Tr
           title={t('contact.map_title')}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          className="aspect-[4/3] w-full rounded-xl border border-border"
+          className="map-embed aspect-[4/3] w-full"
           allowFullScreen
         />
       )}

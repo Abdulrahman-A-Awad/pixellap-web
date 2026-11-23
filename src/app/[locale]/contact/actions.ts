@@ -4,7 +4,13 @@ import { headers } from 'next/headers';
 import { hasLocale } from 'next-intl';
 import { routing } from '@/i18n/routing';
 import type { ApiValidationError, ContactPayload, ContactResponse } from '@/lib/api/types';
-import { CONTACT_FIELDS, type ContactField, type ContactFormValues, type ContactResult } from '@/lib/contact/schema';
+import {
+  CONTACT_FIELDS,
+  OTHER_SERVICE,
+  type ContactField,
+  type ContactFormValues,
+  type ContactResult,
+} from '@/lib/contact/schema';
 import { serverEnv } from '@/lib/env';
 
 /** Visitor IP for the API's per-visitor rate limit: first x-forwarded-for entry, else x-real-ip. */
@@ -28,7 +34,8 @@ export async function submitContact(values: ContactFormValues, locale: string): 
     email: values.email.trim(),
     phone: optional(values.phone),
     company: optional(values.company),
-    service: optional(values.service),
+    // "Other" chip = no category (the API only accepts visible category slugs).
+    service: values.service === OTHER_SERVICE ? null : optional(values.service),
     message: values.message.trim(),
     locale: lang,
     website: values.website ?? '',

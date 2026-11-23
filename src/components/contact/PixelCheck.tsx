@@ -1,6 +1,4 @@
-'use client';
-
-import { motion } from 'motion/react';
+import type { CSSProperties } from 'react';
 
 // 7×7 grid: a check mark drawn in pixels (row, col), in drawing order.
 const CHECK: [number, number][] = [
@@ -14,14 +12,13 @@ const CHECK: [number, number][] = [
 ];
 const COLORS = ['var(--brand-lavender)', 'var(--brand-iris)', 'var(--brand-royal)'];
 
-/** Animated pixel check mark (Motion; static under reduced motion via MotionConfig). */
+/** Animated pixel check mark: cells pop in one by one (CSS `.pixel-check`, static under reduced motion). */
 export function PixelCheck({ size = 84 }: { size?: number }) {
   const cell = size / 7;
-
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+    <svg className="pixel-check" width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
       {CHECK.map(([row, col], i) => (
-        <motion.rect
+        <rect
           key={`${row}-${col}`}
           x={col * cell + 1}
           y={row * cell + 1}
@@ -29,10 +26,7 @@ export function PixelCheck({ size = 84 }: { size?: number }) {
           height={cell - 2}
           rx={2}
           fill={COLORS[i % COLORS.length]}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15 + i * 0.07, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
+          style={{ '--i': i } as CSSProperties}
         />
       ))}
     </svg>

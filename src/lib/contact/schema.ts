@@ -17,6 +17,9 @@ export const CONTACT_LIMITS = {
 
 export const PHONE_PATTERN = /^[0-9\s+()-]+$/;
 
+/** Service chip "Other": a form-only value, sent to the API as no service (null). */
+export const OTHER_SERVICE = 'other';
+
 /** Field values as the form holds them (empty string = not provided). */
 export interface ContactFormValues {
   name: string;

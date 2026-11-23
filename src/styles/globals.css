@@ -1547,3 +1547,248 @@ html.lenis body {
 .stack-shade {
   background: var(--stack-shade);
 }
+
+/* ───────────────────────────── Contact page ───────────────────────────── */
+
+/* Hero: soft radial brand glow behind the centred copy (decorative, transform-free). */
+.contact-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(50% 60% at 50% 30%, color-mix(in oklab, var(--brand-lavender) 22%, transparent), transparent 70%),
+    radial-gradient(35% 40% at 75% 55%, color-mix(in oklab, var(--brand-iris) 14%, transparent), transparent 70%);
+}
+.light .contact-glow {
+  background:
+    radial-gradient(50% 60% at 50% 30%, color-mix(in oklab, var(--brand-lavender) 16%, transparent), transparent 70%),
+    radial-gradient(35% 40% at 75% 55%, color-mix(in oklab, var(--brand-pearl) 80%, transparent), transparent 70%);
+}
+
+/* Glass card (quick contact): translucent surface over the hero glow, hairline, soft shadow. */
+.glass-card {
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(16px);
+  backdrop-filter: saturate(160%) blur(16px);
+  box-shadow: var(--card-shadow);
+}
+@supports (corner-shape: squircle) {
+  .glass-card {
+    corner-shape: squircle;
+    border-radius: 44px;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-card {
+    background: var(--card);
+  }
+}
+.quick-arrow {
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+.quick-card:hover .quick-arrow,
+.quick-card:focus-visible .quick-arrow {
+  transform: translateX(4px);
+}
+[dir='rtl'] .quick-card:hover .quick-arrow,
+[dir='rtl'] .quick-card:focus-visible .quick-arrow {
+  transform: translateX(-4px);
+}
+.quick-card:hover {
+  border-color: color-mix(in oklab, var(--brand-lavender) 50%, transparent);
+}
+
+/*
+ * Floating-label fields (ContactForm): the label rests inside the field and floats to the top
+ * edge on focus / when filled (:placeholder-shown with a " " placeholder). Logical insets only.
+ */
+.float-field {
+  position: relative;
+}
+.float-input {
+  width: 100%;
+  min-height: 3.5rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  padding: 1.5rem 1rem 0.5rem;
+  transition:
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+textarea.float-input {
+  padding-top: 1.75rem;
+  resize: none;
+  overflow-y: auto;
+}
+.float-input:hover {
+  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+}
+.float-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 22%, transparent);
+}
+.float-input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.float-input[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--danger) 22%, transparent);
+}
+.float-label {
+  position: absolute;
+  inset-inline-start: 1rem;
+  top: 1.75rem;
+  translate: 0 -50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: calc(100% - 2rem);
+  color: var(--text-muted);
+  pointer-events: none;
+  transform-origin: left center;
+  transition:
+    top var(--dur-base) var(--ease-spring),
+    font-size var(--dur-base) var(--ease-spring),
+    color var(--dur-fast) ease;
+}
+[dir='rtl'] .float-label {
+  transform-origin: right center;
+}
+.float-input:focus ~ .float-label,
+.float-input:not(:placeholder-shown) ~ .float-label {
+  top: 0.95rem;
+  font-size: 0.875rem;
+}
+.float-input:focus ~ .float-label {
+  color: var(--link);
+}
+.float-input::placeholder {
+  color: transparent;
+}
+.optional-tag {
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Gentle shake on invalid fields at each failed submit (two identical keyframes so it re-runs). */
+@media (prefers-reduced-motion: no-preference) {
+  [data-attempt='odd'] .float-field:has([aria-invalid='true']),
+  [data-attempt='odd'] .chips[data-invalid] {
+    animation: field-shake-a 0.42s var(--ease-out-expo);
+  }
+  [data-attempt='even'] .float-field:has([aria-invalid='true']),
+  [data-attempt='even'] .chips[data-invalid] {
+    animation: field-shake-b 0.42s var(--ease-out-expo);
+  }
+}
+@keyframes field-shake-a {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+@keyframes field-shake-b {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+/* Service chips: native radios (keyboard: arrows) styled as selectable pills. */
+.chip {
+  position: relative;
+}
+.chip input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.chip span {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  /* 22px = a pill at one line (44px); a long label that wraps on phones becomes a rounded block. */
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0.5rem 1rem;
+  color: var(--text-muted);
+  text-align: start;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-base) var(--ease-spring);
+}
+.chip:hover span {
+  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+  color: var(--text);
+}
+.chip input:checked + span {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.chip input:active + span {
+  transform: scale(0.97);
+}
+.chip input:focus-visible + span {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+/* Map: rounded, a touch desaturated in dark so it does not glare. */
+.map-embed {
+  border-radius: 18px;
+  border: 1px solid var(--border);
+}
+.dark .map-embed,
+:root:not(.light) .map-embed {
+  filter: grayscale(0.35) brightness(0.88) contrast(1.05);
+}
+
+/* Success: pixel check cells pop in one by one (CSS; final state under reduced motion). */
+@media (prefers-reduced-motion: no-preference) {
+  .pixel-check rect {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: pixel-pop 0.45s var(--ease-pop) both;
+    animation-delay: calc(150ms + var(--i, 0) * 70ms);
+  }
+  .form-swap {
+    animation: form-swap-in var(--dur-slow) var(--ease-out-expo) both;
+  }
+}
+@keyframes pixel-pop {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+@keyframes form-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}

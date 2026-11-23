@@ -185,6 +185,16 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Services: `/services` = `services/ServicesBento` (fixed 2-large + 4-medium layout); `/services/[slug]` = CategoryHero
   (breadcrumb + BreadcrumbList), overview (`.prose-rich`), sticky `ServiceIndex` / mobile `ServiceChips`, `ServiceItemCard`
   ("Request this service" → `/contact?service=&item=` prefills the form), FAQ, `CategoryRail`, CTA, Service JSON-LD.
+- Contact (`/contact`, `components/contact/*`): `ContactHero` (centred eyebrow/title/subtitle, `.contact-glow`, CSS
+  `.hero-rise`) → `QuickContact` (glass cards `.glass-card` WhatsApp / email / call overlapping the hero; each hidden when
+  its setting is empty/TODO; WhatsApp = widget prefill with the page title; phone via `formatPhone` + `<bdi dir="ltr">`) →
+  form (7/12) + `ContactInfoCard` (5/12, sticky: response chip, hours, address, `layout/SocialLinks`, map `.map-embed`) →
+  `NextSteps` (process markup, `ProcessProgress trigger="enter"`) → `ContactFaq` (first 3 home FAQs, `FaqList`, → `/#faq`).
+  `ContactForm`: no animation library; floating labels (`.float-*`, placeholder=" "), "Optional" tag in the label,
+  service = native radios as chips (`.chip`, "Other" = `OTHER_SERVICE` → sent as null), auto-growing textarea + counter,
+  shake on failed submit (`data-attempt` odd/even), error summary (role=alert) and focus on the first invalid field in
+  VISUAL order (`shouldFocusError: false` + `focusFirst`), success = `.form-swap` + CSS `PixelCheck` + WhatsApp.
+  JSON-LD: `contactPageJsonLd` (ContactPage + Organization contact point). Footer and contact show the phone formatted.
 - SEO: `app/sitemap.ts` (from GET /sitemap, en/ar alternates) and `app/robots.ts`. `buildMetadata` falls back to
   `settings.og_image` for pages without their own image.
 - After seeding new ui strings, the Next data cache may still hold the old `/site`: POST the `site` tag to

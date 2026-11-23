@@ -89,3 +89,23 @@ export function organizationJsonLd(
       : {}),
   };
 }
+
+/** schema.org ContactPage (contact page), with the Organization (+ its contact point) as main entity. */
+export function contactPageJsonLd(
+  site: Site,
+  locale: Locale,
+  page: { title: string; description?: string | null },
+  alternateName: string | null = null,
+): Record<string, unknown> {
+  const organization = organizationJsonLd(site, locale, alternateName);
+  delete organization['@context']; // nested entity: the page carries the context
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: page.title,
+    ...(page.description ? { description: page.description } : {}),
+    url: `${SITE_URL}/${locale}/contact`,
+    inLanguage: locale,
+    mainEntity: organization,
+  };
+}
