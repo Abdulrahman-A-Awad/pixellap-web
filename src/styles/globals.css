@@ -2197,16 +2197,13 @@ textarea.float-input {
 .svc-row-chevron {
   color: var(--text-muted);
   transition:
-    rotate var(--dur-base) var(--ease-spring),
+    transform var(--dur-base) var(--ease-spring),
     color var(--dur-fast) ease;
 }
 .svc-row[data-open] .svc-row-index,
 .svc-row[data-open] .svc-row-chevron,
 .svc-row-head:hover .svc-row-chevron {
   color: var(--link);
-}
-.svc-row[data-open] .svc-row-chevron {
-  rotate: 180deg;
 }
 .svc-row-head:focus-visible {
   outline: 2px solid var(--primary);
@@ -2230,4 +2227,17 @@ textarea.float-input {
   transition:
     grid-template-rows var(--dur-base) var(--ease-out-expo),
     visibility 0s;
+}
+/* CSS chevron (no SVG per row: 43 rows on the services page). */
+.svc-row-chevron {
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-inline: 0.45rem;
+  flex-shrink: 0;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-25%) rotate(45deg);
+}
+.svc-row[data-open] .svc-row-chevron {
+  transform: translateY(25%) rotate(225deg);
 }

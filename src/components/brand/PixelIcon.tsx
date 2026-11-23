@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { cn } from '@/lib/cn';
+import { pixelPath } from './pixelPath';
 
 /** Small pixel-art glyphs (rows top→bottom, 1 = filled), drawn on the brand's square grid. */
 const GLYPHS = {
@@ -75,22 +76,18 @@ export function PixelIcon({
           </linearGradient>
         </defs>
       )}
-      <g fill={gradient ? `url(#${gradientId})` : 'currentColor'}>
-        {rows.flatMap((row, r) =>
-          [...row].map((bit, c) =>
-            bit === '1' ? (
-              <rect
-                key={`${r}-${c}`}
-                x={c * cell + gap / 2}
-                y={r * cell + gap / 2}
-                width={cell - gap}
-                height={cell - gap}
-                rx={cell * 0.15}
-              />
-            ) : null,
+      <path
+        fill={gradient ? `url(#${gradientId})` : 'currentColor'}
+        d={pixelPath(
+          rows.flatMap((row, r) =>
+            [...row].flatMap((bit, c): [number, number][] =>
+              bit === '1' ? [[c * cell + gap / 2, r * cell + gap / 2]] : [],
+            ),
           ),
+          cell - gap,
+          cell * 0.15,
         )}
-      </g>
+      />
     </svg>
   );
 }

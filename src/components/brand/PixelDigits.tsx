@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn';
+import { pixelPath } from './pixelPath';
 
 /** 3×5 bitmap per digit (rows top→bottom, 1 = filled). */
 const GLYPHS: Record<string, string[]> = {
@@ -46,23 +47,20 @@ export function PixelDigits({
       aria-hidden={label ? undefined : true}
       direction="ltr"
     >
-      {chars.map((char, ci) =>
-        GLYPHS[char].flatMap((row, r) =>
-          [...row].map((bit, c) =>
-            bit === '1' ? (
-              <rect
-                key={`${ci}-${r}-${c}`}
-                x={ci * 4 * cell + c * cell + gap / 2}
-                y={r * cell + gap / 2}
-                width={cell - gap}
-                height={cell - gap}
-                rx={cell * 0.15}
-                fill="currentColor"
-              />
-            ) : null,
+      <path
+        fill="currentColor"
+        d={pixelPath(
+          chars.flatMap((char, ci) =>
+            GLYPHS[char].flatMap((row, r) =>
+              [...row].flatMap((bit, c): [number, number][] =>
+                bit === '1' ? [[ci * 4 * cell + c * cell + gap / 2, r * cell + gap / 2]] : [],
+              ),
+            ),
           ),
-        ),
-      )}
+          cell - gap,
+          cell * 0.15,
+        )}
+      />
     </svg>
   );
 }
