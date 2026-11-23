@@ -316,8 +316,30 @@ export interface ServiceCategory {
 
 export type ServiceCategoriesResponse = ApiEnvelope<ServiceCategory[]>;
 
+/** A service as a light row (GET /service-categories?include=services). */
+export interface ServiceRow {
+  id: number;
+  title: string;
+  /** First sentence of the description, plain text, at most 140 characters. */
+  short: string;
+  /** In-page id of the service card on the category page: /services/{slug}#{anchor}. */
+  anchor: string;
+}
+
+/** GET /service-categories?include=services: a category with its rich description, video and services. */
+export interface ServiceCategoryWithServices extends ServiceCategory {
+  /** HTML (rich editor). */
+  description: string;
+  hero_video: MediaAsset | null;
+  services: ServiceRow[];
+}
+
+export type ServiceCategoriesWithServicesResponse = ApiEnvelope<ServiceCategoryWithServices[]>;
+
 export interface Service {
   id: number;
+  /** Stable in-page id of the service card (slugified English title, unique in the category). */
+  anchor: string;
   title: string;
   description: PlainText;
   features: string[];

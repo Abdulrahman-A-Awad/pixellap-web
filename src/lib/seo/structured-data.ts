@@ -1,6 +1,6 @@
 import { routing } from '@/i18n/routing';
 import { getSite } from '@/lib/api/endpoints';
-import type { Locale, ServiceCategoryDetail, Site } from '@/lib/api/types';
+import type { Locale, ServiceCategoryDetail, ServiceCategoryWithServices, Site } from '@/lib/api/types';
 import { settingValue, socialLinks } from '@/lib/site/settings';
 import { SITE_URL } from '@/lib/site-url';
 
@@ -128,5 +128,44 @@ export function aboutPageJsonLd(
     url: `${SITE_URL}/${locale}/about`,
     inLanguage: locale,
     mainEntity: organization,
+  };
+}
+
+/** schema.org ItemList of the service categories (services index), each a Service by the Organization. */
+export function servicesItemListJsonLd(
+  categories: ServiceCategoryWithServices[],
+  site: Site,
+  locale: Locale,
+  page: { title: string; description?: string | null },
+  alternateName: string | null = null,
+): Record<string, unknown> {
+  const provider = {
+    '@type': 'Organization',
+    name: site.settings.site_name,
+    ...(alternateName ? { alternateName } : {}),
+    url: `${SITE_URL}/${locale}`,
+    logo: `${SITE_URL}/brand/pixellap-logo.svg`,
+  };
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: page.title,
+    ...(page.description ? { description: page.description } : {}),
+    url: `${SITE_URL}/${locale}/services`,
+    numberOfItems: categories.length,
+    itemListElement: categories.map((category, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Service',
+        name: category.title,
+        serviceType: category.title,
+        description: category.excerpt,
+        url: `${SITE_URL}/${locale}/services/${category.slug}`,
+        areaServed: 'AE',
+        ...(category.cover ? { image: category.cover.url } : {}),
+        provider,
+      },
+    })),
   };
 }

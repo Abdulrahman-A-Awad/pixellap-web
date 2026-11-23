@@ -9,6 +9,7 @@ import type {
   PageKey,
   PageResponse,
   ServiceCategoriesResponse,
+  ServiceCategoriesWithServicesResponse,
   ServiceCategoryResponse,
   SiteResponse,
   SitemapResponse,
@@ -52,6 +53,11 @@ export const getPage = cache((key: PageKey, locale: Locale) =>
 
 export const getCategories = cache((locale: Locale) =>
   getOr404<ServiceCategoriesResponse>('/service-categories', locale, ['categories']),
+);
+
+/** Services index: categories with their description, video and services (anchors for deep links). */
+export const getCategoriesWithServices = cache((locale: Locale) =>
+  getOr404<ServiceCategoriesWithServicesResponse>('/service-categories?include=services', locale, ['categories']),
 );
 
 export const getCategory = cache((slug: string, locale: Locale) =>

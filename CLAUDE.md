@@ -92,8 +92,10 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - **Section reveals on home = `components/motion/Reveal`** (`variant`, `index` for stagger, `as`): the server HTML is the
   FINAL state; after hydration only elements below 85% of the viewport are set hidden (instantly, unseen) and animate in
   once when they pass the 85% line (IntersectionObserver, works in every browser; reduced motion = nothing). Used by
-  `SectionHeading` (eyebrow / title / subtitle / action staggered), About, stats, FAQ, clients, CTA. Inner pages still use
-  the CSS `data-reveal` (scroll-driven, progressive). Don't nest a `data-reveal` inside a `Reveal`.
+  About, stats, FAQ, clients, CTA. Inner pages still use the CSS `data-reveal` (scroll-driven, progressive). Don't nest a
+  `data-reveal` inside a `Reveal`. Stacked parts that must appear together use `<Reveal group>` + `[data-reveal-item]`
+  children (`--reveal-index` stagger): `SectionHeading` does — separate Reveals per part let the 85% line split a header
+  (eyebrow shown, title still hidden: the "missing process title" bug).
 - **Glass navbar:** `layout/Header` = floating pill (`.nav-shell` / `.nav-pill`): centred, max 1200px, 12px from the top,
   always visible (no hide-on-scroll), `--glass-bg` + `backdrop-filter: saturate(180%) blur(20px)`, hairline
   `--glass-border`, `--glass-shadow`; compacts after 24px (64→56 desktop, 56→52 phones, `--pill-h*`, spring easing). No
@@ -157,7 +159,7 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   Pre-launch, link-preview bots pass the basic auth (API runbook §13).
 - Home renders `/home` sections in API order (`app/[locale]/page.tsx` → `renderSection`). The stats render inside the
   About section (`AboutTeaser`: a full-width strip of 4 tiles under the image | text columns); the standalone `StatsSection` only shows on home when About is hidden (and on /about). Both use THE tile component `home/StatTiles`.
-  Sections live in `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `PageHero`, `ui/CtaLink`.
+  Sections live in `components/sections/{home,about}`; shared: `SectionHeading`, `ContactCtaBand`, `ui/CtaLink`.
 - **Reveal on scroll:** add `data-reveal` (stagger with `style={{'--reveal-i': n}}`). Pure CSS scroll-driven animation
   (`animation-timeline: view()`, in `@supports` + no-preference motion): no JS, never touches server HTML; on-screen
   content is already in its final state; unsupported browsers just show it. Ancestors of `[data-reveal]` must use
@@ -166,7 +168,8 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - **Above-the-fold text is always plain server HTML** (no JS-gated or opacity-0 animations). The hero title reveal is
   pure CSS and starts at opacity 0.001. Phones: the hero visual is an inline SVG until first interaction
   (keeps the headline as LCP).
-- Islands: `useInView` / `observe()` (`lib/hooks/useInView.ts`) share observers; GSAP is only ever `import()`ed after
+- Islands: `useInView` / `observe()` (`lib/hooks/useInView.ts`) share observers (several callbacks per element are
+  fine; the element is unobserved when the last one stops); GSAP is only ever `import()`ed after
   idle (`StackingCards`, `HeroStage`, `SmoothScroll`). Never import gsap/motion statically in always-loaded code.
 - Fonts: brand font RH-Zak (Arabic + Latin, `next/font/local`): Regular 400 + Bold 700 preloaded — use `font-normal` /
   `font-bold`. Thin 100 is a separate, non-preloaded face for large display text only (`font-display-thin`, ≥ 2.5rem).
@@ -186,9 +189,22 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   stat counters = CSS `@property --n` + `.stat-count`, triggered by the tiny `home/StatCount` island (`data-count` in React state).
 - Plurals: `plural(t, locale, 'services.count', n)` (`lib/site/format.ts`) picks `{base}_{Intl.PluralRules category}`
   — Arabic needs zero/one/two/few/many/other keys in the seeder. `interpolate()` fills `{placeholders}`.
-- Services: `/services` = `services/ServicesBento` (fixed 2-large + 4-medium layout); `/services/[slug]` = CategoryHero
+- Services index `/services` (`services/overview/*`, data = `getCategoriesWithServices` → `?include=services`):
+  `ServicesHero` (eyebrow `services.hero_eyebrow`, title/subtitle, stat line from counts with `plural()` and a pixel
+  separator, `ServiceSearch`, 6 glass discipline tiles) → `.services-flow` wrapper: `DisciplineNav` (sticky at
+  `--header-h`, height `--dnav-h` 66px, scroll-spy at 40%, sliding `.discipline-pill`, horizontal scroller with edge fades
+  and the active item centred; items capped on phones) + one `DisciplineShowcase` per category (lg: sticky
+  `.showcase-media-col`, frame height = viewport − both bars, capped 680px; Reveal scale-in, Parallax, pixel mark,
+  `ShowcaseVideo` plays the hero video only while in view; content: PixelDigits, title, `.prose-rich` description,
+  `ServiceRows` (one open; hover with 140ms intent on fine pointers, focus, tap; grid-rows expand) and buttons; sides
+  alternate) → process, stats, home FAQ, ONE CTA band; ItemList JSON-LD. In-page links use `SectionLink` /
+  `scrollToSection` (offset = header + discipline nav; sections carry the same `scroll-margin-top`).
+  `ServiceSearch`: combobox over every service (`lib/site/search.ts`: normalised Arabic, `matchRange` maps the highlight
+  back to the original text), grouped by discipline, Enter → `/services/{slug}#{anchor}`.
+  `/services/[slug]` = CategoryHero
   (breadcrumb + BreadcrumbList), overview (`.prose-rich`), sticky `ServiceIndex` / mobile `ServiceChips`, `ServiceItemCard`
-  ("Request this service" → `/contact?service=&item=` prefills the form), FAQ, `CategoryRail`, CTA, Service JSON-LD.
+  (id = the API `anchor`; "Request this service" → `/contact?service=&item=` prefills the form), FAQ, `CategoryRail`,
+  CTA, Service JSON-LD.
 - Contact (`/contact`, `components/contact/*`): `ContactHero` (centred eyebrow/title/subtitle, `.page-glow`, CSS
   `.hero-rise`) → `QuickContact` (glass cards `.glass-card` WhatsApp / email / call overlapping the hero; each hidden when
   its setting is empty/TODO; WhatsApp = widget prefill with the page title; phone via `formatPhone` + `<bdi dir="ltr">`) →

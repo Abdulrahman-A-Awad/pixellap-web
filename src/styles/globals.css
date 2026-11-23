@@ -661,6 +661,18 @@ html.lenis body {
     border-color var(--dur-base) ease;
 }
 
+/* Group reveal (Reveal group): the parts reveal together, staggered, when the group's top passes. */
+[data-reveal-group='hidden'] [data-reveal-item] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: none;
+}
+[data-reveal-group='shown'] [data-reveal-item] {
+  transition:
+    opacity var(--dur-slow) var(--ease-out-expo) calc(var(--reveal-index, 0) * 80ms),
+    transform var(--dur-slow) var(--ease-out-expo) calc(var(--reveal-index, 0) * 80ms);
+}
+
 /* ───────────────────────────── Stats count-up (pure CSS) ───────────────────────────── */
 
 /*
@@ -2021,4 +2033,201 @@ textarea.float-input {
   100% {
     box-shadow: 0 0 0 7px transparent;
   }
+}
+
+/* ───────────────────────────── Services index ───────────────────────────── */
+
+/* Height of the sticky discipline nav: py-2 (16) + bar (border 2 + p-1 8 + item h-10 40) = 66px. */
+.services-flow {
+  --dnav-h: 66px;
+}
+
+/* Instant search: big glass field + results panel. */
+.search-field {
+  border-radius: var(--radius-pill);
+  transition:
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+@supports (corner-shape: squircle) {
+  .search-field {
+    corner-shape: round;
+    border-radius: var(--radius-pill);
+  }
+}
+.search-field:focus-within {
+  border-color: var(--primary);
+  box-shadow:
+    var(--card-shadow),
+    0 0 0 4px color-mix(in oklab, var(--primary) 22%, transparent);
+}
+.search-field input::-webkit-search-cancel-button {
+  display: none;
+}
+.search-pop {
+  position: absolute;
+  z-index: 40;
+  inset-inline: 0;
+  top: calc(100% + 10px);
+  max-height: min(26rem, 60vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border-radius: 22px;
+  border: 1px solid var(--glass-border);
+  /* Nearly opaque: results sit over the discipline tiles and must stay readable. */
+  background: color-mix(in oklab, var(--card) 97%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: var(--glass-shadow), var(--card-shadow);
+  text-align: start;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .search-pop {
+    animation: select-in var(--dur-base) var(--ease-spring);
+  }
+}
+.search-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 14px;
+  cursor: pointer;
+}
+.search-option[data-active] {
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+}
+.search-enter {
+  color: var(--link);
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease;
+}
+.search-option[data-active] .search-enter {
+  opacity: 1;
+}
+.search-mark {
+  background: color-mix(in oklab, var(--brand-lavender) 28%, transparent);
+  color: inherit;
+  border-radius: 4px;
+  padding: 0 1px;
+}
+
+/* Hero discipline tiles. */
+.discipline-tile:hover {
+  border-color: color-mix(in oklab, var(--brand-lavender) 50%, transparent);
+}
+
+/* Sticky discipline nav: right under the floating navbar. */
+.discipline-nav {
+  top: var(--header-h);
+}
+.discipline-bar {
+  border-radius: var(--radius-pill);
+}
+@supports (corner-shape: squircle) {
+  .discipline-bar {
+    corner-shape: round;
+    border-radius: var(--radius-pill);
+  }
+}
+.discipline-scroller {
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.discipline-scroller::-webkit-scrollbar {
+  display: none;
+}
+/* Fade the side(s) where items are hidden, so the bar reads as scrollable. */
+.discipline-scroller[data-fade-left] {
+  mask-image: linear-gradient(to right, transparent, #000 40px);
+}
+.discipline-scroller[data-fade-right] {
+  mask-image: linear-gradient(to left, transparent, #000 40px);
+}
+.discipline-scroller[data-fade-left][data-fade-right] {
+  mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+}
+.discipline-pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: 0;
+  opacity: 0;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  box-shadow: 0 6px 18px -8px var(--accent-glow);
+  transition:
+    transform var(--dur-base) var(--ease-spring),
+    width var(--dur-base) var(--ease-spring),
+    opacity var(--dur-fast) ease;
+}
+
+/* Showcase sections: anchors land below both sticky bars. */
+.showcase {
+  scroll-margin-top: calc(var(--header-h) + var(--dnav-h) + 16px);
+}
+.showcase-media {
+  aspect-ratio: 4 / 3;
+}
+@media (min-width: 1024px) {
+  .showcase-media-col {
+    position: sticky;
+    top: calc(var(--header-h) + var(--dnav-h) + 16px);
+  }
+  /* The frame always fits the viewport under both bars (1366×657 included), capped on tall screens. */
+  .showcase-media {
+    aspect-ratio: auto;
+    height: clamp(340px, calc(100svh - var(--header-h) - var(--dnav-h) - 48px), 680px);
+  }
+}
+
+/* Service rows: one opens at a time; the panel grows smoothly (grid rows 0fr → 1fr). */
+.svc-row {
+  border-bottom: 1px solid var(--border);
+}
+.svc-row-head {
+  transition: color var(--dur-fast) ease;
+}
+.svc-row-index {
+  color: var(--text-muted);
+  transition: color var(--dur-fast) ease;
+}
+.svc-row-chevron {
+  color: var(--text-muted);
+  transition:
+    rotate var(--dur-base) var(--ease-spring),
+    color var(--dur-fast) ease;
+}
+.svc-row[data-open] .svc-row-index,
+.svc-row[data-open] .svc-row-chevron,
+.svc-row-head:hover .svc-row-chevron {
+  color: var(--link);
+}
+.svc-row[data-open] .svc-row-chevron {
+  rotate: 180deg;
+}
+.svc-row-head:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.svc-row-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--dur-base) var(--ease-out-expo),
+    visibility 0s linear var(--dur-base);
+}
+.svc-row-panel > div {
+  overflow: hidden;
+}
+.svc-row[data-open] .svc-row-panel {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--dur-base) var(--ease-out-expo),
+    visibility 0s;
 }

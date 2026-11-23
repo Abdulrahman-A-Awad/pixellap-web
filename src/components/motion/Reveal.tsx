@@ -16,6 +16,11 @@ type Phase = 'hidden' | 'shown';
  *   (lib/motion.ts ↔ globals.css `[data-reveal-state]`: slow 0.8s, ease-out, 24px / 0.96 / blur);
  * - anything already on screen / above, and reduced motion, stays in the final state.
  * `index` staggers siblings (`--reveal-index` × 80ms).
+ *
+ * `group`: the element itself never fades; its `[data-reveal-item]` descendants reveal TOGETHER when the
+ * group's top passes the line, staggered by their own `--reveal-index` (globals.css `[data-reveal-group]`).
+ * Use it for stacked parts that must never be split by the 85% line (section headers: an eyebrow
+ * revealed above the line while the title below it stayed hidden).
  */
 export function Reveal({
   children,
@@ -24,9 +29,11 @@ export function Reveal({
   as: Tag = 'div',
   className,
   style,
+  group = false,
 }: {
   children: ReactNode;
   variant?: RevealVariant;
+  group?: boolean;
   index?: number;
   as?: ElementType;
   className?: string;
@@ -57,8 +64,9 @@ export function Reveal({
     <Tag
       ref={ref}
       className={className}
-      data-reveal-variant={variant}
-      data-reveal-state={phase}
+      data-reveal-variant={group ? undefined : variant}
+      data-reveal-state={group ? undefined : phase}
+      data-reveal-group={group ? phase : undefined}
       style={index ? ({ ...style, '--reveal-index': index } as CSSProperties) : style}
     >
       {children}

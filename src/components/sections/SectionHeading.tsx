@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Reveal } from '@/components/motion/Reveal';
 import { cn } from '@/lib/cn';
 
@@ -14,8 +14,8 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
 
 /**
  * THE section header block (eyebrow + H2 + subtitle), used by every content section so spacing and
- * alignment are identical everywhere. Eyebrow, title, subtitle and action reveal with a stagger
- * (Reveal). Start-aligned by default; `action` (e.g. a "View all" link) sits on the inline-end side
+ * alignment are identical everywhere. Eyebrow, title, subtitle and action reveal TOGETHER (one Reveal
+ * group triggered by the header's top, staggered in CSS) — never an eyebrow without its title. Start-aligned by default; `action` (e.g. a "View all" link) sits on the inline-end side
  * from md up, under the text on phones. `wide` lifts the 42rem cap so a long title can stay on one
  * line on laptops (the subtitle keeps its reading measure).
  */
@@ -49,35 +49,42 @@ export function SectionHeading({
       )}
     >
       {eyebrow && (
-        <Reveal index={0}>
+        <div data-reveal-item style={{ '--reveal-index': 0 } as CSSProperties}>
           <Eyebrow>{eyebrow}</Eyebrow>
-        </Reveal>
+        </div>
       )}
       {title && (
-        <Reveal index={1}>
+        <div data-reveal-item style={{ '--reveal-index': 1 } as CSSProperties}>
           <h2 id={id} className="text-heading text-balance">
             {title}
           </h2>
-        </Reveal>
+        </div>
       )}
       {subtitle && (
-        <Reveal index={2}>
+        <div data-reveal-item style={{ '--reveal-index': 2 } as CSSProperties}>
           <p className="mt-1 measure text-lead text-pretty text-muted">{subtitle}</p>
-        </Reveal>
+        </div>
       )}
     </div>
   );
 
   if (!action) {
-    return <div className={className}>{text}</div>;
+    return (
+      <Reveal group className={className}>
+        {text}
+      </Reveal>
+    );
   }
 
   return (
-    <div className={cn('flex flex-col items-start gap-6 md:flex-row md:items-end md:justify-between', className)}>
+    <Reveal
+      group
+      className={cn('flex flex-col items-start gap-6 md:flex-row md:items-end md:justify-between', className)}
+    >
       {text}
-      <Reveal index={3} className="shrink-0">
+      <div data-reveal-item className="shrink-0" style={{ '--reveal-index': 3 } as CSSProperties}>
         {action}
-      </Reveal>
-    </div>
+      </div>
+    </Reveal>
   );
 }

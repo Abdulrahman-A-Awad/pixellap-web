@@ -5,8 +5,6 @@ import { Link } from '@/i18n/navigation';
 import type { Service } from '@/lib/api/types';
 import { CategoryIcon } from './CategoryIcon';
 
-export const serviceAnchor = (service: Pick<Service, 'id'>) => `service-${service.id}`;
-
 /** One sub-service: number, icon, title, description, features checklist, image, request link. */
 export function ServiceItemCard({
   service,
@@ -19,7 +17,8 @@ export function ServiceItemCard({
   categorySlug: string;
   requestLabel: string;
 }) {
-  const id = serviceAnchor(service);
+  // Stable anchor from the API (slugified English title): /services/{slug}#{anchor} deep links.
+  const id = service.anchor;
 
   return (
     <article

@@ -10,7 +10,7 @@ import { CategoryHero } from '@/components/sections/services/CategoryHero';
 import { CategoryIcon } from '@/components/sections/services/CategoryIcon';
 import { CategoryRail } from '@/components/sections/services/CategoryRail';
 import { ServiceChips, ServiceIndex } from '@/components/sections/services/ServiceIndex';
-import { serviceAnchor, ServiceItemCard } from '@/components/sections/services/ServiceItemCard';
+import { ServiceItemCard } from '@/components/sections/services/ServiceItemCard';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { Link } from '@/i18n/navigation';
 import { resolveLocale } from '@/i18n/locale';
@@ -58,7 +58,7 @@ export default async function CategoryPage({ params }: PageProps<'/[locale]/serv
   );
   const others = categories.filter((c) => c.slug !== slug);
   const cta = home.find((s): s is ContactCtaSection => s.key === 'contact_cta');
-  const items = category.services.map((s) => ({ id: serviceAnchor(s), title: s.title }));
+  const items = category.services.map((s) => ({ id: s.anchor, title: s.title }));
 
   return (
     <>
