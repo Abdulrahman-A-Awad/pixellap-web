@@ -50,6 +50,7 @@
   --link: #9d7bfa;
   --danger: #ff8a8a;
   --warning: #ffd27a;
+  --success: #5ee08f;
   /* Decorative pixel fields (PixelField): never louder than this. */
   --pixel-opacity: 0.35;
   /* Card fill: --surface on --bg sections, --bg on surface sections (.tone-surface). */
@@ -82,6 +83,7 @@
   --link: #3a119e;
   --danger: #b42318;
   --warning: #8a4b00;
+  --success: #0b6b35;
   --pixel-opacity: 0.2;
   --card: var(--surface);
   --glass-bg: rgba(255, 255, 255, 0.6);
@@ -131,6 +133,7 @@
   --color-danger: var(--danger);
   --color-warning: var(--warning);
   --color-whatsapp: var(--whatsapp);
+  --color-success: var(--success);
   --color-on-whatsapp: var(--on-whatsapp);
 }
 
@@ -749,9 +752,10 @@ html.lenis body {
 /* ───────────────────────────── Process ───────────────────────────── */
 
 /*
- * Each step = an 18px marker + a card, laid out in pure CSS (markers centred on the icon chip:
- * --chip-x on lg, --marker-y on the vertical timeline). One .process-seg per step joins its marker
- * centre to the next one (none on the last).
+ * Each step = an 18px marker + a card, laid out in pure CSS. Row (lg): each marker sits exactly above
+ * its card's step number (--num-x = distance of the number's centre from the card's inline-end edge);
+ * vertical timeline: beside the card header row (--marker-y). One .process-seg per step joins its
+ * marker centre to the next one (none on the last).
  *
  * Scroll-linked (ProcessProgress): each segment's fill is --seg-fill (= the wrapper's --f{i}, 0..1,
  * written per frame; 1 without JS). Row: progress 0 when the cards row's top reaches 85% of the
@@ -770,7 +774,7 @@ html.lenis body {
 @media (min-width: 1024px) {
   .process-steps {
     --step-gap: 1.5rem;
-    --chip-x: 56px; /* card p-7 (28) + chip 56 / 2 */
+    --num-x: 42px; /* card p-7 (28) + step number (PixelDigits "01", cell 4 = 28px) / 2 */
     grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
   }
 }
@@ -816,7 +820,7 @@ html.lenis body {
 @media (min-width: 1024px) {
   .process-dot {
     margin-top: 0;
-    margin-inline-start: calc(var(--chip-x) - var(--marker) / 2);
+    margin-inline-start: calc(100% - var(--num-x) - var(--marker) / 2);
   }
 }
 
@@ -866,7 +870,7 @@ html.lenis body {
 }
 @media (min-width: 1024px) {
   .process-seg {
-    inset-inline-start: var(--chip-x);
+    inset-inline-start: calc(100% - var(--num-x));
     top: calc(var(--marker) / 2 - 1px);
     width: calc(100% + var(--step-gap));
     height: 2px;
@@ -1463,19 +1467,60 @@ html.lenis body {
   color: var(--text);
 }
 
-/* Rich-text answers from the admin editor (FAQ). */
-.prose-answer > * + * {
-  margin-top: 0.85em;
+/*
+ * Rich-text answers from the admin editor (FAQ: home, contact, category pages — one component,
+ * home/FaqList). 65ch measure, roomy leading (1.7 en / 1.85 ar), 0.75em between blocks, bullet lists
+ * with brand pixel bullets (a 7px square, lavender → iris), bold lead phrases in the
+ * text colour ("<strong>Logo only:</strong> two weeks"), plain-text answers still read as one paragraph.
+ */
+.prose-answer {
+  max-width: 65ch;
+  line-height: 1.7;
 }
-.prose-answer ul,
-.prose-answer ol {
-  padding-inline-start: 1.25em;
+.prose-answer:lang(ar) {
+  line-height: 1.85;
+}
+.prose-answer > * + * {
+  margin-top: 0.75em;
 }
 .prose-answer ul {
-  list-style: disc;
+  list-style: none;
+  padding: 0;
+}
+.prose-answer ul > li {
+  position: relative;
+  padding-inline-start: 1.4em;
+}
+.prose-answer ul > li + li {
+  margin-top: 0.4em;
+}
+/* Pixel bullet centred on the first line (half the line-height minus half the square). */
+.prose-answer ul > li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0.2em;
+  top: calc(0.85em - 3.5px);
+  width: 7px;
+  height: 7px;
+  border-radius: 1.5px;
+  background: linear-gradient(135deg, var(--brand-lavender), var(--brand-iris));
+}
+.prose-answer:lang(ar) ul > li::before {
+  top: calc(0.925em - 3.5px);
 }
 .prose-answer ol {
   list-style: decimal;
+  padding-inline-start: 1.25em;
+}
+.prose-answer ol > li + li {
+  margin-top: 0.4em;
+}
+.prose-answer ol > li::marker {
+  color: var(--link);
+  font-weight: 700;
+}
+.prose-answer li > p {
+  display: inline;
 }
 .prose-answer a {
   color: var(--link);
@@ -1484,6 +1529,7 @@ html.lenis body {
 }
 .prose-answer strong {
   color: var(--text);
+  font-weight: 700;
 }
 
 /* ───────────────────────────── Page transition ───────────────────────────── */
@@ -1682,12 +1728,10 @@ textarea.float-input {
 
 /* Gentle shake on invalid fields at each failed submit (two identical keyframes so it re-runs). */
 @media (prefers-reduced-motion: no-preference) {
-  [data-attempt='odd'] .float-field:has([aria-invalid='true']),
-  [data-attempt='odd'] .chips[data-invalid] {
+  [data-attempt='odd'] .float-field:has([aria-invalid='true']) {
     animation: field-shake-a 0.42s var(--ease-out-expo);
   }
-  [data-attempt='even'] .float-field:has([aria-invalid='true']),
-  [data-attempt='even'] .chips[data-invalid] {
+  [data-attempt='even'] .float-field:has([aria-invalid='true']) {
     animation: field-shake-b 0.42s var(--ease-out-expo);
   }
 }
@@ -1712,50 +1756,155 @@ textarea.float-input {
   }
 }
 
-/* Service chips: native radios (keyboard: arrows) styled as selectable pills. */
-.chip {
-  position: relative;
-}
-.chip input {
-  position: absolute;
-  opacity: 0;
-  inset: 0;
-  margin: 0;
-  cursor: pointer;
-}
-.chip span {
-  display: inline-flex;
-  min-height: 2.75rem;
+/*
+ * Service picker (contact/ServiceSelect): a select-only combobox that looks like the other floating-
+ * label fields (`.float-input` + `.float-label`, floated when a value is chosen or the list is open),
+ * with a rotating chevron. ≥ 640px: a glass popover under the field (max-height, scrolls); phones: a
+ * bottom sheet (portal, backdrop, drag handle). Options: category icon, label, check when selected;
+ * the active option (keyboard / pointer) is tinted.
+ */
+.select-trigger {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  /* 22px = a pill at one line (44px); a long label that wraps on phones becomes a rounded block. */
-  border-radius: 22px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  padding: 0.5rem 1rem;
-  color: var(--text-muted);
+  gap: 0.75rem;
   text-align: start;
-  transition:
-    background-color var(--dur-fast) ease,
-    border-color var(--dur-fast) ease,
-    color var(--dur-fast) ease,
-    transform var(--dur-base) var(--ease-spring);
+  cursor: pointer;
+  padding-inline-end: 2.75rem;
 }
-.chip:hover span {
-  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
-  color: var(--text);
+.select-trigger[data-filled] ~ .float-label,
+.select-trigger[aria-expanded='true'] ~ .float-label {
+  top: 0.95rem;
+  font-size: 0.875rem;
 }
-.chip input:checked + span {
+.select-trigger[aria-expanded='true'] {
   border-color: var(--primary);
-  background: var(--primary);
-  color: var(--on-primary);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 22%, transparent);
 }
-.chip input:active + span {
-  transform: scale(0.97);
+.select-trigger[aria-expanded='true'] ~ .float-label {
+  color: var(--link);
 }
-.chip input:focus-visible + span {
-  outline: 2px solid var(--primary);
-  outline-offset: 3px;
+.select-chevron {
+  position: absolute;
+  inset-inline-end: 1rem;
+  top: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+  color: var(--text-muted);
+  transition: rotate var(--dur-base) var(--ease-spring);
+}
+.select-trigger[aria-expanded='true'] ~ .select-chevron {
+  rotate: 180deg;
+  color: var(--link);
+}
+.select-pop {
+  position: absolute;
+  z-index: 30;
+  inset-inline: 0;
+  top: calc(100% + 8px);
+  max-height: min(24rem, 60vh); /* 7 options fit on a 657px-tall laptop; longer lists scroll */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border-radius: 18px;
+  border: 1px solid var(--glass-border);
+  background: color-mix(in oklab, var(--card) 86%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: var(--glass-shadow), var(--card-shadow);
+  transform-origin: 50% 0;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .select-pop {
+    background: var(--card);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .select-pop {
+    animation: select-in var(--dur-base) var(--ease-spring);
+  }
+  .select-sheet {
+    animation: sheet-in var(--dur-slow) var(--ease-spring);
+  }
+  .select-backdrop {
+    animation: select-fade-in var(--dur-base) ease;
+  }
+}
+@keyframes select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes select-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+/* Phones: bottom sheet (rendered in a portal on <body>). */
+.select-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  touch-action: none; /* the page behind does not scroll while the sheet is open */
+  background: color-mix(in oklab, var(--brand-black) 45%, transparent);
+}
+.select-sheet {
+  position: fixed;
+  z-index: 81;
+  inset-inline: 0;
+  bottom: 0;
+  max-height: 78svh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px 24px 0 0;
+  border: 1px solid var(--glass-border);
+  border-bottom: 0;
+  background: color-mix(in oklab, var(--card) 92%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  backdrop-filter: saturate(180%) blur(24px);
+  box-shadow: 0 -24px 60px -20px rgba(0, 0, 0, 0.45);
+  padding: 8px 8px calc(12px + env(safe-area-inset-bottom));
+}
+.select-sheet .select-list {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--dur-fast) ease;
+}
+.select-sheet .select-option {
+  min-height: 3.25rem;
+}
+.select-option[data-active] {
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+}
+.select-option[aria-selected='true'] {
+  font-weight: 700;
+}
+.select-check {
+  margin-inline-start: auto;
+  color: var(--link);
+}
+/* The chosen option's icon inside the closed field: smaller, so the field keeps the input height. */
+.select-trigger-icon > * {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0.2rem;
+  border-radius: 7px;
 }
 
 /* Map: rounded, a touch desaturated in dark so it does not glare. */
@@ -1856,4 +2005,20 @@ textarea.float-input {
 .story-quote {
   border-inline-start: 3px solid;
   border-image: linear-gradient(to bottom, var(--brand-lavender), var(--brand-iris)) 1;
+}
+
+/* Contact "Open now" status: the green dot breathes (a soft ring), only while open. */
+@media (prefers-reduced-motion: no-preference) {
+  .status-dot[data-live] {
+    animation: status-pulse 2.4s ease-out infinite;
+  }
+}
+@keyframes status-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 7px transparent;
+  }
 }

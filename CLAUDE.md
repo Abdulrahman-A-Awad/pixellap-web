@@ -137,8 +137,10 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   horizontal scroll-snap, one card per view with a peek, full-bleed (`--gutter`), dots. Card layout follows the CARD width
   (container queries `@2xl:`, photo 40%). The count var is `--stack-n` — `--n` is the stat counter's registered
   non-inheriting property. Photos load eagerly with the `thumb` conversion as background placeholder.
-- Process: geometry is pure CSS (`.process-*`: one `.process-seg` per step, marker centre → next marker centre, markers
-  on the icon chip via `--chip-x` / `--marker-y`). `home/ProcessProgress` links it to the scroll: row = progress 0 when the
+- Process: geometry is pure CSS (`.process-*`: one `.process-seg` per step, marker centre → next marker centre; row
+  (lg) markers sit exactly above each card's step number via `--num-x` (card padding + half the PixelDigits width, from
+  the card's inline-end edge — change it with the card padding / digit cell); vertical timeline: `--marker-y`).
+  `ProcessSection` takes `id` + `icons` so other pages reuse it whole (contact "What happens next"). `home/ProcessProgress` links it to the scroll: row = progress 0 when the
   cards row's top reaches 85% of the viewport, 1 when its bottom does (step 4 always completes while visible); vertical
   timeline = the tip follows the 85% line per segment from the marker positions. Writes `--f{i}` per frame (only while
   visible); `ProcessStep` reads the reached count from context → `data-active` (marker pops with `--ease-pop`, card rises).
@@ -177,7 +179,9 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
   `.stat-affix` = accent, 0.72em, no gap). Stat tiles (`home/StatTiles`): chip + label row, number below, subgrid rows so numbers align. Pixel numerals: `brand/PixelDigits`.
 - Page transitions: `motion/PageTransition` (CSS pixel grid, same-locale internal links only, focus → `<main>`).
 - FAQ = `home/FaqList` (client, exclusive disclosure accordion: grid-rows 0fr→1fr height animation in every browser,
-  `visibility` after close, open card highlighted, + → ×), inside `home/FaqSection` (reused on category pages).
+  `visibility` after close, open card highlighted, + → ×), inside `home/FaqSection` (reused on category pages) and
+  `contact/ContactFaq`. Answers are rich HTML styled by `.prose-answer` (65ch, leading 1.7 en / 1.85 ar via `:lang(ar)`,
+  0.75em block spacing, pixel-square bullets, `<strong>` lead phrases in the text colour).
 - Prefer zero-JS patterns:
   stat counters = CSS `@property --n` + `.stat-count`, triggered by the tiny `home/StatCount` island (`data-count` in React state).
 - Plurals: `plural(t, locale, 'services.count', n)` (`lib/site/format.ts`) picks `{base}_{Intl.PluralRules category}`
@@ -188,12 +192,21 @@ Next.js frontend for the bilingual (EN/AR) Pixellap site. All content comes from
 - Contact (`/contact`, `components/contact/*`): `ContactHero` (centred eyebrow/title/subtitle, `.page-glow`, CSS
   `.hero-rise`) → `QuickContact` (glass cards `.glass-card` WhatsApp / email / call overlapping the hero; each hidden when
   its setting is empty/TODO; WhatsApp = widget prefill with the page title; phone via `formatPhone` + `<bdi dir="ltr">`) →
-  form (7/12) + `ContactInfoCard` (5/12, sticky: response chip, hours, address, `layout/SocialLinks`, map `.map-embed`) →
-  `NextSteps` (process markup, `ProcessProgress trigger="enter"`) → `ContactFaq` (first 3 home FAQs, `FaqList`, → `/#faq`).
+  form (7/12) + `ContactInfoCard` (5/12, sticky: live `OpenStatus` chip, response chip, hours, address,
+  `layout/SocialLinks`, map `.map-embed`) → `NextSteps` (= the home `ProcessSection`, scroll-linked, reverses on the way
+  back) → `ContactFaq` (first 3 home FAQs, `FaqList`, → `/#faq`).
   `ContactForm`: no animation library; floating labels (`.float-*`, placeholder=" "), "Optional" tag in the label,
-  service = native radios as chips (`.chip`, "Other" = `OTHER_SERVICE` → sent as null), auto-growing textarea + counter,
-  shake on failed submit (`data-attempt` odd/even), error summary (role=alert) and focus on the first invalid field in
-  VISUAL order (`shouldFocusError: false` + `focusFirst`), success = `.form-swap` + CSS `PixelCheck` + WhatsApp.
+  service = `contact/ServiceSelect` (APG select-only combobox: button[role=combobox] keeps focus + aria-activedescendant,
+  listbox with category icons and a check; ↑↓ Home End PageUp/Down, type-ahead, Enter/Space, Esc, Tab, outside click;
+  ≥ 640px glass popover `.select-pop`, phones bottom sheet in a portal — never lock scroll with html overflow (shifts the
+  mobile visual viewport); its grid cell needs `min-w-0` or a long value widens the page), "Other" = `OTHER_SERVICE` →
+  sent as null, `?service=` preselects; auto-growing textarea + counter. Validation `mode: 'onTouched'`: nothing on first
+  render, blur validates, then live while typing; shake on failed submit (`data-attempt` odd/even), error summary
+  (role=alert) and focus on the first invalid field in VISUAL order (`shouldFocusError: false` + `focusFirst`), success
+  = `.form-swap` + CSS `PixelCheck` + WhatsApp.
+  `OpenStatus`: `settings.business_hours` ({days, open, close, timezone}) → `lib/site/hours.ts` (`openStatus` in the
+  business timezone, `formatClock` / `formatWeekDay` localized, Latin digits); `useSyncExternalStore` with a null server
+  snapshot (renders nothing until hydrated), re-checked every 30 s; "UAE time" note only for other timezones.
   JSON-LD: `contactPageJsonLd` (ContactPage + Organization contact point). Footer and contact show the phone formatted.
 - About (`/about`): `about/AboutHero` (centred eyebrow = `nav.about`, title, subtitle, `.page-glow`, `.hero-rise`; the
   hero image in a 28px `ui/ScrollFrame`: `--sp` 0→1 while scrolling away → scale 1→.92 + layer drift 0→24px, CSS

@@ -78,6 +78,19 @@ export interface Faq {
 
 /* ────────────────────────────────── /site ─────────────────────────────────── */
 
+/** Week day keys, Monday first. */
+export type WeekDay = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+export interface BusinessHours {
+  /** Working days in week order; [] = no status shown. */
+  days: WeekDay[];
+  /** "HH:MM" (24 h), close is always after open. */
+  open: string;
+  close: string;
+  /** IANA zone the times are in (Asia/Dubai). */
+  timezone: string;
+}
+
 export interface SiteSettings {
   /** Localized brand name ("Pixellap" / "بكسل لاب"): <title>, OG site_name, JSON-LD, footer, WhatsApp chat. */
   site_name: string;
@@ -93,6 +106,8 @@ export interface SiteSettings {
   /** Google Maps embed src; "" when not set. */
   map_embed_url: string;
   working_hours: string;
+  /** Structured opening hours for the live "Open now / Closed" status (display text = working_hours). Null when unset/invalid. */
+  business_hours: BusinessHours | null;
   vat_number: string;
   response_time: string;
   /** Profile URLs; "" when not set. */

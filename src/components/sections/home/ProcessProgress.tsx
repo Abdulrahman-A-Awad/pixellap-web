@@ -19,20 +19,8 @@ const Reached = createContext(Number.POSITIVE_INFINITY);
  * Per frame (only while visible, rAF-throttled) it writes `--f0…--fN` (segment fills, 0..1) on its
  * own element; the number of reached steps is React state (changes only when a step is reached), read
  * by ProcessStep through context. Reduced motion: everything drawn and active.
- *
- * `trigger="enter"` (contact "What happens next"): not scroll-linked — when 30% of the steps are
- * visible, the line draws through every marker in 1.2s and the steps light up in sequence, once.
- * Already on screen at load → final state.
  */
-export function ProcessProgress({
-  children,
-  className,
-  trigger = 'scroll',
-}: {
-  children: ReactNode;
-  className?: string;
-  trigger?: 'scroll' | 'enter';
-}) {
+export function ProcessProgress({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [reached, setReached] = useState(Number.POSITIVE_INFINITY);
 
@@ -42,42 +30,6 @@ export function ProcessProgress({
     const row = el.querySelector<HTMLElement>('ol');
     const markers = [...el.querySelectorAll<HTMLElement>('.process-dot')];
     if (!row || markers.length === 0) return;
-
-    if (trigger === 'enter') {
-      const n = markers.length;
-      const write = (pos: number) => {
-        for (let i = 0; i < n - 1; i++) el.style.setProperty(`--f${i}`, Math.max(0, Math.min(1, pos - i)).toFixed(3));
-        setReached(pos < 0 ? 0 : Math.min(n, Math.floor(pos + 1e-3) + 1));
-      };
-      let frame = 0;
-      let first = true;
-      const stop = observe(
-        el,
-        (entry) => {
-          if (first) {
-            first = false;
-            // Already (mostly) visible or scrolled past: keep the final state.
-            if (entry.intersectionRatio >= 0.3 || entry.boundingClientRect.top < 0) return stop();
-            write(-1); // empty until it scrolls in
-            return;
-          }
-          if (entry.intersectionRatio < 0.3) return;
-          stop();
-          const start = performance.now();
-          const tick = (now: number) => {
-            const p = Math.min(1, (now - start) / 1200);
-            write(p * (n - 1));
-            if (p < 1) frame = requestAnimationFrame(tick);
-          };
-          frame = requestAnimationFrame(tick);
-        },
-        0.3,
-      );
-      return () => {
-        stop();
-        cancelAnimationFrame(frame);
-      };
-    }
 
     let raf = 0;
     let visible = false;
@@ -127,7 +79,7 @@ export function ProcessProgress({
       window.removeEventListener('resize', onScroll);
       cancelAnimationFrame(raf);
     };
-  }, [trigger]);
+  }, []);
 
   return (
     <Reached.Provider value={reached}>

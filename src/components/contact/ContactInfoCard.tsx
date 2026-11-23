@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { SocialLinks } from '@/components/layout/SocialLinks';
 import type { SiteSettings } from '@/lib/api/types';
 import { settingValue } from '@/lib/site/settings';
+import { OpenStatus } from './OpenStatus';
 import type { Translate } from '@/lib/site/translate';
 
 function Row({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
@@ -24,8 +25,9 @@ function Row({ icon, label, children }: { icon: ReactNode; label: string; childr
 }
 
 /**
- * Contact info (sticky beside the form on desktop): the response-time promise as a chip, working
- * hours, the address (value only), the social icons (same component as the footer) and the map
+ * Contact info (sticky beside the form on desktop): the live open/closed status (client, from
+ * settings.business_hours; nothing until hydrated) and the response-time promise as chips, working
+ * hours (display text), the address (value only), the social icons (same component as the footer) and the map
  * (rounded, lazy, slightly desaturated in dark) when Settings has an embed URL. Email / phone /
  * WhatsApp live in the quick-contact cards above.
  */
@@ -41,8 +43,9 @@ export function ContactInfoCard({ settings, t }: { settings: SiteSettings; t: Tr
         <h2 id="contact-info-title" className="text-title">
           {t('contact.info_title')}
         </h2>
+        {settings.business_hours && <OpenStatus hours={settings.business_hours} />}
         {responseTime && (
-          <p className="inline-flex items-center gap-2 rounded-pill bg-primary/10 px-3.5 py-1.5 text-meta font-bold text-link">
+          <p className="inline-flex items-center gap-2 rounded-[16px] bg-primary/10 px-3.5 py-1.5 text-meta font-bold text-link">
             <Hourglass aria-hidden="true" className="size-4" />
             <span className="sr-only">{t('contact.response_time')}: </span>
             {responseTime}

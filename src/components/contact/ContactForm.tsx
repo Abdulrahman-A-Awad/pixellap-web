@@ -1,12 +1,13 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowRight, Ellipsis, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useController, useForm, useWatch } from 'react-hook-form';
 import { submitContact } from '@/app/[locale]/contact/actions';
 import { BrandIcon } from '@/components/brand/BrandIcons';
+import { CategoryIcon } from '@/components/sections/services/CategoryIcon';
 import { useSite } from '@/components/providers/SiteProvider';
 import { buttonClasses } from '@/components/ui/Button';
 import type { ServiceCategory } from '@/lib/api/types';
@@ -21,6 +22,7 @@ import {
 } from '@/lib/contact/schema';
 import { interpolate } from '@/lib/site/format';
 import { PixelCheck } from './PixelCheck';
+import { ServiceSelect, type SelectOption } from './ServiceSelect';
 
 type Banner = { kind: 'throttled' | 'error'; text: string } | null;
 
@@ -64,9 +66,10 @@ function FieldError({ id, children }: { id: string; children: ReactNode }) {
 /**
  * Contact form (glass card on /contact). Floating labels with an inline "Optional" tag; brand focus
  * ring; inline errors (ui strings) + a gentle shake on the invalid fields at each failed submit and
- * an error summary (role="alert", links to the fields) for screen readers. Service = native radios
- * styled as chips (one choice; arrows move between them; "Other" sends no category); ?service=
- * preselects. The message grows with its content (min 5 rows) and shows a character counter.
+ * an error summary (role="alert", links to the fields) for screen readers. Service = custom select
+ * (ServiceSelect: ARIA select-only combobox, glass popover / phone bottom sheet; "Other" sends no
+ * category); ?service= preselects. Validation: nothing on first render; a field validates on blur, then
+ * live while typing once touched (error clears as soon as it is valid); everything on submit. The message grows with its content (min 5 rows) and shows a character counter.
  * Submit → Server Action (actions.ts): 422 → field errors, 429 → friendly retry, success → the form
  * is replaced by an animated pixel check, the API message, "Send another message" and WhatsApp.
  * No animation library: CSS only (globals.css "Contact page").
@@ -120,6 +123,8 @@ export function ContactForm({
     shouldFocusError: false, // see focusFirst
   });
 
+  const { field: serviceField } = useController({ control, name: 'service' });
+
   const id = (name: string) => `${uid}-${name}`;
   const labels: Record<ContactField, string> = {
     name: t('form.name'),
@@ -151,10 +156,14 @@ export function ContactForm({
 
   const failed = () => setAttempt((n) => n + 1);
   /** Focus the first invalid field in VISUAL order (react-hook-form would use registration order). */
+  /** The service picker is a button (not registered as an input), so it is focused by id. */
+  const focusField = (field: ContactField) => {
+    if (field === 'service') document.getElementById(id('service'))?.focus();
+    else setFocus(field);
+  };
   const focusFirst = (invalid: Partial<Record<ContactField, unknown>>) => {
     const first = CONTACT_FIELDS.find((f) => invalid[f]);
-    if (first === 'service') document.getElementById(id('service'))?.focus();
-    else if (first) setFocus(first);
+    if (first) focusField(first);
   };
 
   const onSubmit = handleSubmit(
@@ -222,9 +231,21 @@ export function ContactForm({
 
   const invalidFields = CONTACT_FIELDS.filter((f) => errors[f]);
   const messageRegister = register('message');
-  const serviceOptions = [
-    ...categories.map((c) => ({ value: c.slug, label: c.title })),
-    { value: OTHER_SERVICE, label: t('form.other') },
+  const serviceOptions: SelectOption[] = [
+    ...categories.map((c, i) => ({
+      value: c.slug,
+      label: c.title,
+      icon: <CategoryIcon icon={c.icon} index={i} size="sm" />,
+    })),
+    {
+      value: OTHER_SERVICE,
+      label: t('form.other'),
+      icon: (
+        <span className="inline-flex size-9 items-center justify-center rounded-lg bg-surface-2 text-link">
+          <Ellipsis className="size-4.5" />
+        </span>
+      ),
+    },
   ];
 
   return (
@@ -247,8 +268,7 @@ export function ContactForm({
                   href={`#${id(f)}`}
                   onClick={(e) => {
                     e.preventDefault();
-                    if (f === 'service') document.getElementById(id('service'))?.focus();
-                    else setFocus(f);
+                    focusField(f);
                   }}
                   className="underline underline-offset-2"
                 >
@@ -312,32 +332,22 @@ export function ContactForm({
             className="float-input"
           />
         </FloatField>
-      </div>
-
-      {/* Service: one choice among the categories + "Other" (native radios → arrow keys). */}
-      <fieldset
-        id={id('service')}
-        tabIndex={-1}
-        role="radiogroup"
-        aria-labelledby={`${id('service')}-legend`}
-        aria-describedby={errors.service ? `${id('service')}-error` : undefined}
-        className="chips flex flex-col gap-3 outline-none"
-        data-invalid={errors.service ? '' : undefined}
-      >
-        <legend id={`${id('service')}-legend`} className="mb-3 inline-flex items-center gap-2 font-bold">
-          {labels.service}
-          <span className="optional-tag">{t('form.optional')}</span>
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {serviceOptions.map((option) => (
-            <label key={option.value} className="chip">
-              <input type="radio" value={option.value} {...register('service')} />
-              <span>{option.label}</span>
-            </label>
-          ))}
+        <div className="flex min-w-0 flex-col gap-1.5 sm:col-span-2">
+          <ServiceSelect
+            id={id('service')}
+            label={labels.service}
+            optionalTag={t('form.optional')}
+            sheetTitle={t('form.select_service')}
+            options={serviceOptions}
+            value={serviceField.value}
+            onChange={serviceField.onChange}
+            onBlur={serviceField.onBlur}
+            invalid={Boolean(errors.service)}
+            describedBy={errors.service ? `${id('service')}-error` : undefined}
+          />
+          {errors.service?.message && <FieldError id={`${id('service')}-error`}>{errors.service.message}</FieldError>}
         </div>
-        {errors.service?.message && <FieldError id={`${id('service')}-error`}>{errors.service.message}</FieldError>}
-      </fieldset>
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <div className="float-field">

@@ -37,13 +37,23 @@ function pulseKeyframes(segments: number) {
  * (row top at 85% → row bottom at 85%); markers pop and cards rise as it reaches them; a glow pulse
  * loops along the completed line. Card: pixel icon in a soft chip + pixel-digit number, title, text.
  */
-export function ProcessSection({ section }: { section: ProcessData }) {
+export function ProcessSection({
+  section,
+  id = 'process',
+  icons = ICONS,
+}: {
+  /** Header + steps (home: the CMS process section; contact: "What happens next" from ui strings). */
+  section: Pick<ProcessData, 'eyebrow' | 'title' | 'subtitle' | 'steps'>;
+  id?: string;
+  /** Step icons, cycled. */
+  icons?: PixelIconName[];
+}) {
   if (section.steps.length === 0) return null;
   const total = section.steps.length;
   const pulse = pulseKeyframes(Math.max(total - 1, 1));
 
   return (
-    <section id="process" aria-labelledby="process-title" className="relative isolate section-y">
+    <section id={id} aria-labelledby={`${id}-title`} className="relative isolate section-y">
       <style href={`process-pulse-${total}`} precedence="default">
         {pulse.css}
       </style>
@@ -53,7 +63,7 @@ export function ProcessSection({ section }: { section: ProcessData }) {
           eyebrow={section.eyebrow}
           title={section.title}
           subtitle={section.subtitle}
-          id="process-title"
+          id={`${id}-title`}
           wide
         />
 
@@ -75,7 +85,7 @@ export function ProcessSection({ section }: { section: ProcessData }) {
                   <div className="process-card surface-card flex h-full flex-col gap-4 p-6 lg:p-7">
                     <div className="flex items-center justify-between gap-4">
                       <span className="process-icon inline-flex size-14 items-center justify-center rounded-[16px]">
-                        <PixelIcon name={ICONS[i % ICONS.length]} cell={4} gradient />
+                        <PixelIcon name={icons[i % icons.length]} cell={4} gradient />
                       </span>
                       <PixelDigits value={number} cell={4} className="process-num" label={number} />
                     </div>
