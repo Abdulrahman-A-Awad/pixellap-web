@@ -764,9 +764,9 @@ html.lenis body {
 /* ───────────────────────────── Process ───────────────────────────── */
 
 /*
- * Each step = an 18px marker + a card, laid out in pure CSS. Row (lg): each marker sits exactly above
- * its card's step number (--num-x = distance of the number's centre from the card's inline-end edge);
- * vertical timeline: beside the card header row (--marker-y). One .process-seg per step joins its
+ * Each step = an 18px marker + a card, laid out in pure CSS. Row (lg): each marker is centred above
+ * its card, so the line runs from the middle of the first card to the middle of the last (symmetric
+ * over the row, the same in LTR and RTL); vertical timeline: beside the card header row (--marker-y). One .process-seg per step joins its
  * marker centre to the next one (none on the last).
  *
  * Scroll-linked (ProcessProgress): each segment's fill is --seg-fill (= the wrapper's --f{i}, 0..1,
@@ -786,7 +786,6 @@ html.lenis body {
 @media (min-width: 1024px) {
   .process-steps {
     --step-gap: 1.5rem;
-    --num-x: 42px; /* card p-7 (28) + step number (PixelDigits "01", cell 4 = 28px) / 2 */
     grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
   }
 }
@@ -832,7 +831,7 @@ html.lenis body {
 @media (min-width: 1024px) {
   .process-dot {
     margin-top: 0;
-    margin-inline-start: calc(100% - var(--num-x) - var(--marker) / 2);
+    margin-inline: auto;
   }
 }
 
@@ -882,7 +881,7 @@ html.lenis body {
 }
 @media (min-width: 1024px) {
   .process-seg {
-    inset-inline-start: calc(100% - var(--num-x));
+    inset-inline-start: 50%;
     top: calc(var(--marker) / 2 - 1px);
     width: calc(100% + var(--step-gap));
     height: 2px;
@@ -1188,14 +1187,15 @@ html.lenis body {
 
 /*
  * Two modes from ONE markup (StackingCards / ServiceCard), switched by media queries:
- * - STACK (>= 768px wide AND >= 600px tall: every laptop incl. 1366x657): each card sticks at
+ * - STACK (>= 768px wide AND >= 560px tall: every laptop incl. 1366x768 under browser bars, ~600): each card sticks at
  *   header + 16px + i * 10px with a min-height of --stack-h, which makes the LAST, most offset card
  *   end 24px above the fold: min(100svh - header - 16 - (n - 1) * 10 - 24, 520px). The copy is capped
  *   (2-line title, <= 2-line excerpt, ONE tag row + "+N") so it always fits; a min-height, never a
  *   clipping height. GSAP (StackingCards) scales the previous card to 0.94, lifts it 12px and fades
  *   in its shade; the incoming card's copy fades up.
- * - CAROUSEL (phones, or < 600px tall): a horizontal scroll-snap row, one card per view with a peek
- *   of the next, full-bleed to the screen edges, dots below.
+ * - CAROUSEL (phones, or < 560px tall): a horizontal scroll-snap row, one card per view with a peek
+ *   of the next, full-bleed to the screen edges, dots below; with a mouse also prev/next arrows and
+ *   drag-to-scroll (grab cursor; snap suspended while dragging).
  * The card's own layout follows ITS width (container queries: 2 columns 60/40 from 42rem).
  */
 .stack-card {
@@ -1210,7 +1210,7 @@ html.lenis body {
 .stack-dots {
   display: none;
 }
-@media (min-width: 768px) and (min-height: 600px) {
+@media (min-width: 768px) and (min-height: 560px) {
   .stack-card {
     position: sticky;
     top: calc(var(--header-h) + 16px + var(--i, 0) * 10px);
@@ -1219,7 +1219,7 @@ html.lenis body {
     min-height: min(calc(100svh - var(--header-h) - 16px - (var(--stack-n, 6) - 1) * 10px - 24px), 520px);
   }
 }
-@media (max-width: 767px), (max-height: 599px) {
+@media (max-width: 767px), (max-height: 559px) {
   .stack-list {
     flex-direction: row;
     gap: 12px;
@@ -1244,6 +1244,44 @@ html.lenis body {
   }
   .stack-dots {
     display: flex;
+  }
+  .stack-list a,
+  .stack-list img {
+    -webkit-user-drag: none;
+  }
+  .stack-list[data-dragging] {
+    scroll-snap-type: none;
+    cursor: grabbing;
+    user-select: none;
+  }
+}
+/* Arrows: mouse/trackpad only (touch swipes). Glass circle; disabled at the ends. */
+.stack-arrow {
+  display: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition:
+    border-color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    opacity var(--dur-fast) ease;
+}
+.stack-arrow:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--brand-lavender) 55%, transparent);
+  background: var(--surface-2);
+}
+.stack-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+@media (pointer: fine) {
+  .stack-arrow {
+    display: inline-flex;
+  }
+  @media (max-width: 767px), (max-height: 559px) {
+    .stack-list {
+      cursor: grab;
+    }
   }
 }
 /* Excerpt: 1 line on short screens, 2 otherwise (with the 2-line title the copy stays in budget). */
@@ -2118,9 +2156,44 @@ textarea.float-input {
   border-color: color-mix(in oklab, var(--brand-lavender) 50%, transparent);
 }
 
-/* Sticky discipline nav: right under the floating navbar. */
+/*
+ * Sticky discipline nav: right under the floating navbar. One bar at a time: while it is stuck and the
+ * page scrolls down, DisciplineNav sets html[data-header-hidden] — the navbar slides up out of view and
+ * the bar moves into its place (bar at 12px = the navbar pill's top; NAV_TOP_HIDDEN = 4px + py-2).
+ * Transforms only: no layout change, no shift.
+ */
 .discipline-nav {
   top: var(--header-h);
+  transition:
+    transform var(--dur-slow) var(--ease-out-expo),
+    opacity var(--dur-base) ease,
+    visibility 0s;
+}
+html[data-header-hidden] .discipline-nav[data-stuck] {
+  transform: translateY(calc(4px - var(--header-h)));
+}
+.nav-shell {
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+}
+/* Keyboard users tabbing into the navbar always get it back. */
+html[data-header-hidden] .nav-shell:not(:focus-within) {
+  transform: translateY(calc(-100% - 16px));
+}
+/*
+ * /services: the bar would repeat the hero tiles right under them, so it takes no space in flow
+ * (negative margin = its height) and only appears once stuck, with the navbar sliding away.
+ */
+.discipline-nav[data-reveal-on-stick] {
+  margin-bottom: calc(-1 * var(--dnav-h));
+}
+.discipline-nav[data-reveal-on-stick]:not([data-stuck]) {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition:
+    transform var(--dur-base) ease,
+    opacity var(--dur-fast) ease,
+    visibility 0s var(--dur-fast);
 }
 .discipline-bar {
   border-radius: var(--radius-pill);
@@ -2175,6 +2248,11 @@ textarea.float-input {
   .showcase-media-col {
     position: sticky;
     top: calc(var(--header-h) + var(--dnav-h) + 16px);
+    transition: top var(--dur-slow) var(--ease-out-expo);
+  }
+  /* Navbar hidden: the media follows the bar up. */
+  html[data-header-hidden] .showcase-media-col {
+    top: calc(4px + var(--dnav-h) + 16px);
   }
   /* The frame always fits the viewport under both bars (1366×657 included), capped on tall screens. */
   .showcase-media {

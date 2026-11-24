@@ -3,19 +3,29 @@
 import type { MouseEvent, ReactNode } from 'react';
 import { getLenis } from '@/lib/motion/lenis';
 
+/** Space the floating navbar occupies (--header-h, declared in rem → px; parseFloat alone reads 4.75). */
+export function headerHeight(): number {
+  const root = getComputedStyle(document.documentElement);
+  const raw = root.getPropertyValue('--header-h').trim();
+  return raw.endsWith('rem') ? parseFloat(raw) * parseFloat(root.fontSize) : parseFloat(raw) || 76;
+}
+
+/** Top of the discipline nav while the navbar is hidden (its bar then sits where the navbar pill was). */
+export const NAV_TOP_HIDDEN = 4;
+
 /**
  * Space taken by the sticky bars above a section: the floating navbar (--header-h) + the discipline
- * nav (its measured height) + a small gap. Sections also carry the same offset as `scroll-margin-top`
- * (CSS) for hash loads and no-JS anchors.
+ * nav (its measured height) + a small gap. Going DOWN into the nav's zone the navbar slides away
+ * (DisciplineNav), so only the nav counts. Sections also carry the navbar-visible offset as
+ * `scroll-margin-top` (CSS) for hash loads and no-JS anchors.
  */
-export function stickyOffset(target?: HTMLElement): number {
-  const root = getComputedStyle(document.documentElement);
-  // --header-h is declared in rem: convert to px (parseFloat alone would read "4.75rem" as 4.75).
-  const raw = root.getPropertyValue('--header-h').trim();
-  const header = raw.endsWith('rem') ? parseFloat(raw) * parseFloat(root.fontSize) : parseFloat(raw) || 76;
+export function stickyOffset(target?: HTMLElement, goingDown = false): number {
+  const header = headerHeight();
   const navEl = document.querySelector<HTMLElement>('[data-discipline-nav]');
   // A target that CONTAINS the nav (e.g. the #services wrapper) starts with it: only the navbar counts.
   if (!navEl || target?.contains(navEl)) return header + 8;
+  const zone = navEl.parentElement;
+  if (goingDown && zone?.contains(target ?? null)) return NAV_TOP_HIDDEN + navEl.offsetHeight + 16;
   return header + navEl.offsetHeight + 16;
 }
 
@@ -45,7 +55,8 @@ export function scrollToSection(id: string): boolean {
   const target = document.getElementById(id);
   if (!target) return false;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const top = documentTop(target) - stickyOffset(target);
+  const y = documentTop(target);
+  const top = y - stickyOffset(target, y - stickyOffset(target) > window.scrollY + 1);
   const lenis = getLenis();
   if (lenis) lenis.scrollTo(top, { immediate: reduced });
   else window.scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });

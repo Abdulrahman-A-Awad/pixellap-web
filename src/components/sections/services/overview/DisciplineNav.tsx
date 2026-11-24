@@ -2,7 +2,10 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { SectionLink } from './SectionLink';
+import { headerHeight, SectionLink } from './SectionLink';
+
+/** Scroll distance (px) in one direction before the navbar hides / comes back. */
+const DIRECTION_SLOP = 8;
 
 /**
  * Sticky glass pill bar (just under the floating navbar) with the discipline names. Scroll-spy: the
@@ -10,11 +13,69 @@ import { SectionLink } from './SectionLink';
  * (transform + width, spring). On narrow screens the bar scrolls horizontally and keeps the active
  * item in view (its own scroller only — the page never jumps). In flow (`position: sticky`), so it
  * causes no layout shift; `[data-discipline-nav]` lets section links include its height in the offset.
+ *
+ * One bar at a time (Apple local-nav pattern): while the bar is stuck (its zone — the parent — spans
+ * the top), scrolling DOWN slides the floating navbar away and the bar takes its place
+ * (`html[data-header-hidden]`, CSS); scrolling up brings the navbar back above it. `revealOnStick`
+ * (/services, where the bar repeats the hero tiles right above it): the bar takes no space in flow and
+ * only appears once stuck (`[data-stuck]`).
  */
-export function DisciplineNav({ items, label }: { items: { slug: string; title: string }[]; label: string }) {
+export function DisciplineNav({
+  items,
+  label,
+  revealOnStick = false,
+}: {
+  items: { slug: string; title: string }[];
+  label: string;
+  revealOnStick?: boolean;
+}) {
   const [active, setActive] = useState<string | null>(null);
+  const navRef = useRef<HTMLElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const pillRef = useRef<HTMLSpanElement>(null);
+
+  // Stuck state + navbar hide on scroll down (attributes React does not own; cleaned up on unmount).
+  useEffect(() => {
+    const nav = navRef.current;
+    const zone = nav?.parentElement;
+    if (!nav || !zone) return;
+    const root = document.documentElement;
+    let frame = 0;
+    let anchorY = window.scrollY; // where the current scroll direction started
+    let hidden = false;
+    const update = () => {
+      frame = 0;
+      const y = window.scrollY;
+      const box = zone.getBoundingClientRect();
+      const stuck = box.top <= headerHeight() + 1 && box.bottom > headerHeight() + nav.offsetHeight + 24;
+      if (!stuck) {
+        hidden = false;
+        anchorY = y;
+      } else if (y - anchorY > DIRECTION_SLOP) {
+        hidden = true;
+        anchorY = y;
+      } else if (anchorY - y > DIRECTION_SLOP) {
+        hidden = false;
+        anchorY = y;
+      }
+      // Keep the anchor at the furthest point in the current direction.
+      if ((hidden && y > anchorY) || (!hidden && stuck && y < anchorY)) anchorY = y;
+      nav.toggleAttribute('data-stuck', stuck);
+      root.toggleAttribute('data-header-hidden', hidden);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      cancelAnimationFrame(frame);
+      root.removeAttribute('data-header-hidden');
+    };
+  }, []);
 
   // Scroll-spy over the sections.
   useEffect(() => {
@@ -76,7 +137,13 @@ export function DisciplineNav({ items, label }: { items: { slug: string; title: 
   }, [active]);
 
   return (
-    <nav aria-label={label} data-discipline-nav className="discipline-nav sticky z-30 py-2">
+    <nav
+      ref={navRef}
+      aria-label={label}
+      data-discipline-nav
+      data-reveal-on-stick={revealOnStick ? '' : undefined}
+      className="discipline-nav sticky z-30 py-2"
+    >
       <div className="container-page">
         <div className="discipline-bar glass-card mx-auto w-fit max-w-full">
           <div ref={scrollerRef} className="discipline-scroller relative flex items-center gap-0.5 overflow-x-auto p-1">

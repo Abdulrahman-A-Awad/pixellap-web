@@ -121,6 +121,7 @@ export default async function ServicesPage({ params }: PageProps<'/[locale]/serv
       {categories.length > 0 && (
         <div className="services-flow">
           <DisciplineNav
+            revealOnStick
             label={t('services.nav_label')}
             items={categories.map((c) => ({ slug: c.slug, title: c.title }))}
           />
